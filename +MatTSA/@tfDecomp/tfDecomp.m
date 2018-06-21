@@ -41,6 +41,8 @@ classdef tfDecomp <  labelledArray
     function obj = tfDecomp(decompType,tfData,tVals,fVals,chanLabels)
       %% Object Constructor Function
       if nargin>0
+
+        if 
         obj.decompType_ = decompType;
         obj.tfData = tfData;
         obj.tVals = tVals;
