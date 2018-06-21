@@ -1,4 +1,4 @@
-# MatTSA: A Matlab package for time series analysis
+# MatTSA: A Matlab package for Time Series Analysis
 
 Depends on:
 labelledArray : https://github.com/hdamon/labelledArray
