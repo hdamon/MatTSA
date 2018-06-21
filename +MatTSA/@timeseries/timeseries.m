@@ -471,7 +471,17 @@ classdef timeseries < labelledArray
     %% SubCopy
     function out = subcopy(obj,varargin)
       % Not really necessary, but included for the future.                
-      out = obj.subcopy@labelledArray(varargin{:});            
+      out = obj.subcopy@labelledArray(varargin{:});       
+      
+      if ~isempty(obj.decomposition)
+        decompNames = fields(obj.decomposition);
+        for i = 1:numel(decompNames)
+          tmpDecomp = obj.decomposition.(decompNames{i}).copy;
+          tmpDecomp = tmpDecomp.selectTimes(out.xvals);
+          out.decomposition.(decompNames{i}) = tmpDecomp;
+        end
+        
+      end      
     end
   end
   
