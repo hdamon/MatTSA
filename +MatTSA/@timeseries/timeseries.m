@@ -1,13 +1,7 @@
 classdef timeseries < labelledArray
-  % Data class for timeseries data
+  % Data class for timeseries data  
   %
-  % Data is stored as: time X channels
-  %
-  % While this duplicates some of the functionality of other types,
-  % this is used exclusively in the crlBase.gui rendering package to provide
-  % a common interface.
-  %
-  % obj = crlBaseBase.type.timeseries(data,chanLabels,varargin)
+  % obj = MatTSA.timeseries(data,chanLabels,varargin)
   %
   % Inputs
   % ------
@@ -16,19 +10,16 @@ classdef timeseries < labelledArray
   %   
   % Param-Value Pairs
   % -----------------
-  %  tUnits : Units for the data (DEFAULT: 'uV')
+  %     tUnits : Units for the data (DEFAULT: [])
   %  dataUnits : Units of time (DEFAULT: 'sec')
-  %   tVals : Timings associated with each sample. 
-  % sampleRate : Sample rate for the data (DEFAULTL: 1Hz)
+  %      tVals : Timings associated with each sample. 
+  % sampleRate : Sample rate for the data (DEFAULT: 1Hz)
   % 
   % Referencing into timeseries objects
   % -----------------------------------
-  % One of the primary motivators behind creating this library was to
-  % simplify the way in which EEG object can be accessed, sliced, and
-  % referenced.
-  %
-  % Toward that end, MatTSA.timeseries objects are referenced slightly
-  % differently whether they are 
+  %   As a subclass of labelledArray, MatTSA.timeseries has the same
+  %   referencing options available. "help matTSA.timeseries" for more
+  %   information.
   % 
   %
   % Written By: Damon Hyde
@@ -55,6 +46,10 @@ classdef timeseries < labelledArray
     dataRange
   end;
     
+  properties
+    decomposition
+  end
+  
   properties (Access=protected)   
     sampleRate_;   
     chanType_;
@@ -79,8 +74,8 @@ classdef timeseries < labelledArray
         p.addParameter(  'chanType', []  ,@(x) ischar(x)||iscellstr(x));
         p.addParameter(     'tVals', []  ,@(x) isempty(x)||isvector(x));
         p.addParameter(    'tUnits','sec',@ischar);
-        p.addParameter('sampleRate', 1   ,@(x) isnumeric(x)&&isscalar(x));
-        p.addParameter( 'dataUnits','uV' ,@(x) ischar(x)||iscellstr(x));
+        p.addParameter('sampleRate',  1  ,@(x) isnumeric(x)&&isscalar(x));
+        p.addParameter( 'dataUnits', []  ,@(x) ischar(x)||iscellstr(x));
                         
         p.parse(varargin{:});
         
@@ -100,8 +95,8 @@ classdef timeseries < labelledArray
         obj.dataUnits  = p.Results.dataUnits;
         
         % Set Dimension Names
-        obj.dimNames{1} = 'time';
-        obj.dimNames{2} = 'channel';
+        obj.dimNames{obj.tDim} = 'time';
+        obj.dimNames{obj.chanDim} = 'channel';
       end;
     end
          
@@ -130,12 +125,14 @@ classdef timeseries < labelledArray
       
       p = inputParser;
       p.KeepUnmatched = true;
-      p.addParamValue('type','dualplot',@(x) ischar(x));
+      p.addParameter('type','dualplot',@(x) ischar(x));
       p.parse(varargin{:});
             
       switch lower(p.Results.type)
         case 'dualplot'
           out = MatTSA.gui.timeseries.dualPlot(obj,p.Unmatched);
+        case 'withdecomp'
+          out = plotWithDecomp(obj,p.Unmatched);
         case 'butterfly'
           out = butterfly(obj,p.Unmatched);
         case 'split'
@@ -243,8 +240,8 @@ classdef timeseries < labelledArray
         end;
       else
          obj.array_ = [obj.data data(:)];        
-         obj.dimLabels{2}{end+1} = label;
-         obj.dimUnits_{2}{end+1} = units;
+         obj.dimLabels{obj.chanDim}{end+1} = label;
+         obj.dimUnits_{obj.chanDim}{end+1} = units;
          obj.chanType_{end+1} = type;         
       end
     end;
@@ -267,8 +264,8 @@ classdef timeseries < labelledArray
       idx = ~ismember(obj.chanLabels,label);
            
       % Truncate the internal channels
-      obj.dimLabels_{2} = obj.chanLabels(idx);
-      obj.dimUnits_{2} = obj.tUnits(idx);
+      obj.dimLabels_{obj.chanDim} = obj.chanLabels(idx);
+      obj.dimUnits_{obj.chanDim} = obj.tUnits(idx);
       obj.array_ = obj.data(:,idx);
       obj.chanType_ = obj.chanType_(idx);
     end
@@ -326,11 +323,11 @@ classdef timeseries < labelledArray
                 
     %% Get/Set Methods for obj.dataUnits
     function out = get.dataUnits(obj)
-      out = obj.dimUnits{2};      
+      out = obj.dimUnits{obj.chanDim};      
     end;    
     
     function set.dataUnits(obj,val)
-      if isempty(val), obj.dimUnits{2} = []; return; end;
+      if isempty(val), obj.dimUnits{obj.chanDim} = []; return; end;
       assert(ischar(val)||iscellstr(val),...
               'tUnits must be a character string or cell array of strings');
       if ~iscellstr(val)
@@ -339,7 +336,7 @@ classdef timeseries < labelledArray
         cellVal = val;
       end;
             
-      obj.dimUnits_{2} = cellVal;                        
+      obj.dimUnits_{obj.chanDim} = cellVal;                        
     end    
     
     %% Get/Set Methods for Data
@@ -353,7 +350,7 @@ classdef timeseries < labelledArray
            
     %% Set/Get Methods for obj.chanLabels
     function out = get.chanLabels(obj)           
-      out = obj.dimLabels{2};      
+      out = obj.dimLabels{obj.chanDim};      
     end % END get.chanLabels
     
     function set.chanLabels(obj,val)
@@ -384,22 +381,22 @@ classdef timeseries < labelledArray
             
     %% Get/Set Methods for obj.tVals    
     function out = get.tVals(obj)
-      out = obj.dimValues{1};      
+      out = obj.dimValues{obj.tDim};      
     end    
     function set.tVals(obj,val)
       if isempty(val)
         % Default time values.
         val = (1./obj.sampleRate)*(0:size(obj.data,1)-1);
       end
-      obj.dimValues{1} = val;
+      obj.dimValues{obj.tDim} = val;
     end;
     
     %% Get/Set Methods for obj.tUnits
     function out = get.tUnits(obj)
-      out = obj.dimUnits{1};
+      out = obj.dimUnits{obj.tDim};
     end
     function set.tUnits(obj,val)
-      obj.dimUnits{1} = val;
+      obj.dimUnits{obj.tDim} = val;
     end;
     
     
@@ -426,15 +423,39 @@ classdef timeseries < labelledArray
     
     %% Methods with their own m-files
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    plotOut = butterfly(tseries,varargin)
-    outEEG = filtfilt(tseries,dFilter)
+    plotOut = butterfly(tseries,varargin);
+    plotOut = plotWithDecomp(tseries,varargin);
     
-    function outTseries = filter(tseries,dFilter)
-      tmp = filter(dFilter,tseries.data(:,tseries.getChannelsByType('data')));
+    function outTseries = filtfilt(tseries,dFilter)
+      % Overloaded filtfilt function for crltseries.type.timeseries objects
+      %
+      % Inputs
+      % ------
+      %   tseries : A crltseries.type.tseries.object to be filtered
+      %  dFilter : A Matlab digital filter (typically created with designfilt)
+      %
+                  
+      dataChans = tseries.getChannelsByType('data');      
+      tmp = filtfilt(dFilter,tseries.data(:,dataChans));      
       outTseries = tseries.copy;
-      outTseries.data(:,outTseries.getChannelsByType('data')) = tmp;
+      outTseries.data(:,dataChans) = tmp;      
     end
     
+    function outTseries = filter(tseries,dFilter)
+      % Overloaded filter function for MatTSA.timeseries objects
+      %
+      % Inputs
+      % ------
+      %  tseries : A MatTSA.timeseries object to be filtered
+      % dFilter : A matlab digitalFilter object (typically created with
+      % designfilt)
+      %      
+      tmp = filter(dFilter,tseries.data(:,tseries.getChannelsByType('data')));
+      
+      outTseries = tseries.copy;
+      outTseries.data(:,outTseries.getChannelsByType('data')) = tmp;      
+    end
+        
   end
   
   methods (Access=protected)
@@ -443,23 +464,14 @@ classdef timeseries < labelledArray
       obj = obj.copyValuesFrom@labelledArray(valObj);      
       if isa(valObj,'MatTSA.timeseries')
        % Can only copy these if it's actually a timeseries object.
-       obj.sampleRate = valObj.sampleRate;
-       obj.dataUnits  = valObj.dataUnits;
-       obj.tUnits     = valObj.tUnits;      
+       obj.sampleRate = valObj.sampleRate;    
       end;
     end
     
     %% SubCopy
-    function out = subcopy(obj,idxRow,idxCol)
-      % Copy object, including only a subset of timepoints and columns. If
-      % not provided or empty, indices default to all values.
-      %
-      % Mostly intended as a utility function to simplify subsref.
-      %
-      if ~exist('idxRow','var'), idxRow = ':'; end;
-      if ~exist('idxCol','var'), idxCol = ':'; end;
-                 
-      out = obj.subcopy@labelledArray(idxRow,idxCol);            
+    function out = subcopy(obj,varargin)
+      % Not really necessary, but included for the future.                
+      out = obj.subcopy@labelledArray(varargin{:});            
     end
   end
   
