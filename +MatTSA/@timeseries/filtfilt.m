@@ -8,9 +8,12 @@ function outTseries = filtfilt(tseries,dFilter)
 %
 
 
-tmp = filtfilt(dFilter,tseries.data(:,tseries.getChannelsByType('data')));
+
+dataChans = tseries.getChannelsByType('data');
+
+tmp = filtfilt(dFilter,tseries.data(:,dataChans));
 
 outTseries = tseries.copy;
-outTseries.data(:,outTseries.getChannelsByType('data')) = tmp;
+outTseries.data(:,dataChans) = tmp;
 
 end

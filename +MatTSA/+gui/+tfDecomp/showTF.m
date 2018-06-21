@@ -1,4 +1,4 @@
-classdef showTF < crlEEG.gui.uipanel
+classdef showTF < guiTools.uipanel
 %classdef showTF < matlab.ui.container.Panel
 % Provides a GUI interface for crlEEG.type.timeFrequencyDecomposition objects
 %
@@ -41,18 +41,18 @@ classdef showTF < crlEEG.gui.uipanel
         %% Input Parsing
         p = inputParser;
         p.KeepUnmatched = true;
-        p.addRequired('tfDecomp',@(x) isa(x,'timeFrequencyDecomposition'));
+        p.addRequired('tfDecomp',@(x) isa(x,'MatTSA.tfDecomp'));
         p.addParameter('title','TITLE',@(x) ischar(x));
         p.addParameter('showBand',[]);
         p.addParameter('showTimes',[]);
         p.addParameter('showChan',[]);
         p.addParameter('logImg',false);
         p.addParameter('range',[]);        
-        p.addParameter('colormap',crlEEG.gui.widget.alphacolor,@(x) isa(x,'crlEEG.gui.widget.alphacolor'));
+        p.addParameter('colormap',guiTools.widget.alphacolor,@(x) isa(x,'guiTools.widget.alphacolor'));
         p.parse(tfDecomp,varargin{:});
                       
         % Superclass Constructor
-        obj = obj@crlEEG.gui.uipanel(p.Unmatched); 
+        obj = obj@guiTools.uipanel(p.Unmatched); 
                 
         % Display Axes
         obj.ax = axes('parent',obj.panel,'units','normalized');        
@@ -62,15 +62,13 @@ classdef showTF < crlEEG.gui.uipanel
         if ~isempty(p.Results.range)
           obj.cmap.range = p.Results.range;
         end;
-             
-
-        
+                    
         % Input Data Handle
         obj.tfDecomp = p.Results.tfDecomp;
         
         % Channel Selection Object
         obj.chanSelect = uicontrol('Style','popup',...
-                                   'String',obj.tfDecomp.labels,...
+                                   'String',obj.tfDecomp.chanLabels,...
                                    'Parent',obj.panel,...                                   
                                    'CallBack',@(h,evt) updateImage(obj));
                                  
@@ -82,7 +80,7 @@ classdef showTF < crlEEG.gui.uipanel
         
         if ~isempty(p.Results.showChan)
           if iscellstr(p.Results.showChan)||ischar(p.Results.showChan)
-            idx = find(cellfun(@(x) isequal(x,p.Results.showChan),obj.tfDecomp.labels));
+            idx = find(cellfun(@(x) isequal(x,p.Results.showChan),obj.tfDecomp.chanLabels));
           else
             idx = p.Results.showChan;
           end;
@@ -112,10 +110,7 @@ classdef showTF < crlEEG.gui.uipanel
     end;
     
     function set.showBand(obj,val)
-      if ~isequal(obj.showBand_,val)
-        obj.showBand_ = val;
-        obj.updateImage;
-      end;
+      obj.setProperty('showBand',val);      
     end
 
     function out = get.showTimes(obj)
@@ -123,10 +118,7 @@ classdef showTF < crlEEG.gui.uipanel
     end
     
     function set.showTimes(obj,val)
-      if ~isequal(obj.showTimes_,val)
-        obj.showTimes_ = val;
-        obj.updateImage;
-      end
+      obj.setProperty('showTimes',val);
     end    
     
     function out = get.logImg(obj)
@@ -134,21 +126,20 @@ classdef showTF < crlEEG.gui.uipanel
     end;
     
     function set.logImg(obj,val)
-      if ~isequal(obj.logImg_,val)
-        obj.logImg_ = val;
-        obj.updateImage;
-      end;
+      obj.setProperty('logImg',val);      
     end
     
     function out = get.imgRange(obj)
-      out = obj.imgRange_;
+      out = [];
+      if ~isempty(obj.cmap)
+        out = obj.cmap.range;
+      end      
     end
     
     function set.imgRange(obj,val)
-      if ~isequal(obj.imgRange_,val)
-        obj.imgRange_ = val;
-        obj.updateImage;
-      end;
+      if ~isempty(obj.cmap)
+        obj.cmap.range = val;
+      end;      
     end
           
     function resizeInternals(obj)
@@ -190,14 +181,14 @@ classdef showTF < crlEEG.gui.uipanel
         
     function updateImage(obj)
       axes(obj.ax); cla;
-      set(crlEEG.gui.util.parentfigure.get(obj),'colormap',obj.cmap.cmap);
+      set(guiTools.util.parentfigure.get(obj),'colormap',obj.cmap.cmap);
       obj.tfDecomp.imagesc('parent',obj.ax,...
                            'showBand',obj.showBand,...
                            'showChan',obj.showChan,...
                            'showTimes',obj.showTimes,...
                            'logImg',obj.logImg,...
                            'range',obj.imgRange,...
-                           'colormap',obj.cmap)
+                           'colormap',obj.cmap);
                          
       if isempty(obj.cbar_)||~ishghandle(obj.cbar_)
         obj.cbar_ = colorbar('peer',obj.ax,'East');                   
@@ -217,6 +208,15 @@ classdef showTF < crlEEG.gui.uipanel
   %%  PROTECTED METHODS
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods (Access=protected)
+    
+    function setProperty(obj,prop,val)
+      internalProp = [prop '_'];
+      if ~isequal(obj.(internalProp),val)
+        obj.(internalProp) = val;
+        obj.updateImage;
+      end;      
+    end
+    
   end
   
   %%  STATIC PROTECTED METHODS

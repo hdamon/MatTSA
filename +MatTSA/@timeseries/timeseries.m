@@ -32,8 +32,8 @@ classdef timeseries < labelledArray
   % 
   %
   % Written By: Damon Hyde
-  % Part of the crlBase Project
-  % 2009-2017
+  % Part of the MatTSA Package
+  % 2018-
   %
   
   
@@ -60,6 +60,11 @@ classdef timeseries < labelledArray
     chanType_;
   end;
         
+  properties (Access=private, Constant)
+    tDim    = 1;
+    chanDim = 2;
+  end
+  
   methods
     
     function obj = timeseries(varargin)
@@ -70,16 +75,17 @@ classdef timeseries < labelledArray
         p = inputParser;
         p.addRequired('data',@(x) (isnumeric(x)&&ismatrix(x))||...
                                     isa(x,'MatTSA.timeseries'));
-        p.addParameter('chanLabels',[],@(x) isempty(x)||iscellstr(x));
-        p.addParameter('chanType',[],@(x) ischar(x)||iscellstr(x));
-        p.addParameter('tVals',[],@(x) isempty(x)||isvector(x));
-        p.addParameter('tUnits','sec',@ischar);
-        p.addParameter('sampleRate',1,@(x) isnumeric(x)&&isscalar(x));
-        p.addParameter('dataUnits','uV',@(x) ischar(x)||iscellstr(x));
+        p.addParameter('chanLabels', []  ,@(x) isempty(x)||iscellstr(x));
+        p.addParameter(  'chanType', []  ,@(x) ischar(x)||iscellstr(x));
+        p.addParameter(     'tVals', []  ,@(x) isempty(x)||isvector(x));
+        p.addParameter(    'tUnits','sec',@ischar);
+        p.addParameter('sampleRate', 1   ,@(x) isnumeric(x)&&isscalar(x));
+        p.addParameter( 'dataUnits','uV' ,@(x) ischar(x)||iscellstr(x));
                         
         p.parse(varargin{:});
         
         if isa(p.Results.data,'MatTSA.timeseries')
+          % Return a new object with the same values as the input
           obj = obj.copyValuesFrom(p.Results.data);
           return;
         end                
@@ -93,6 +99,7 @@ classdef timeseries < labelledArray
         obj.sampleRate = p.Results.sampleRate;
         obj.dataUnits  = p.Results.dataUnits;
         
+        % Set Dimension Names
         obj.dimNames{1} = 'time';
         obj.dimNames{2} = 'channel';
       end;
@@ -301,6 +308,7 @@ classdef timeseries < labelledArray
         [out{1:size(obj,2)}] = deal('data');
       end;
     end; % END get.chanType    
+    
     function set.chanType(obj,val)
       if isempty(val), obj.chanType_ = []; return; end;
       assert(ischar(val)||iscellstr(val),...
@@ -318,11 +326,7 @@ classdef timeseries < labelledArray
                 
     %% Get/Set Methods for obj.dataUnits
     function out = get.dataUnits(obj)
-      if ~isempty(obj.dimUnits{2})
-        out = obj.dimUnits{2};
-      else
-        out{1:size(obj,2)} = deal('uV');
-      end;
+      out = obj.dimUnits{2};      
     end;    
     
     function set.dataUnits(obj,val)
@@ -334,9 +338,7 @@ classdef timeseries < labelledArray
       else
         cellVal = val;
       end;
-      
-      assert(numel(cellVal)==size(obj,2),...
-              'tUnits must have a number of elements equal to the number of channels');
+            
       obj.dimUnits_{2} = cellVal;                        
     end    
     
@@ -392,6 +394,7 @@ classdef timeseries < labelledArray
       obj.dimValues{1} = val;
     end;
     
+    %% Get/Set Methods for obj.tUnits
     function out = get.tUnits(obj)
       out = obj.dimUnits{1};
     end
@@ -424,7 +427,7 @@ classdef timeseries < labelledArray
     %% Methods with their own m-files
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     plotOut = butterfly(tseries,varargin)
-    outEEG = filtfilt(EEG,dFilter)
+    outEEG = filtfilt(tseries,dFilter)
     
     function outTseries = filter(tseries,dFilter)
       tmp = filter(dFilter,tseries.data(:,tseries.getChannelsByType('data')));

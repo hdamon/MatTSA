@@ -5,7 +5,7 @@ function varargout = subsref(obj,s)
 switch s(1).type
   case '.'    
     
-    if isequal(s(1).subs,'data')&&(numel(s)>1)&&isequal(s(2).type,'()')
+    if isequal(s(1).subs,'tfData')&&(numel(s)>1)&&isequal(s(2).type,'()')
       % Permits obj.data(<ref>) indexing.
       tmp = subsref(obj,s(1));
       s(2).subs = obj.getNumericIndex(s(2).subs{:});
