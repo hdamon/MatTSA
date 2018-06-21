@@ -25,7 +25,7 @@ import crlBase.util.validation.isNumericVector
 
 %% Input Parsing
 p = inputParser;
-p.addRequired('tseries',@(x) isa(x,'crlBase.type.timeseries'));
+p.addRequired('tseries',@(x) isa(x,'MatTSA.timeseries'));
 p.addOptional('ax',[],@(x) ishghandle(x)&&strcmpi(get(x,'type'),'axes'));
 p.addParamValue('tRange',tseries.tRange,@(x) isvector(x)&&(numel(x)==2));
 p.addParamValue('dataRange',tseries.dataRange,@(x) isvector(x)&&(numel(x)==2));

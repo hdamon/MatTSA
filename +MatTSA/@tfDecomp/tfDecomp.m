@@ -31,9 +31,20 @@ classdef tfDecomp <  labelledArray
     fVals    
     fRange    
   end
- 
+
+  properties (Access=protected)
+    decompType_
+  end
+  
+  properties (Access=private,Constant)
+    % Provided to avoid confusion elsewhere
+    fDim = 1;
+    tDim = 2;
+    chanDim = 3;
+  end
+
   properties
-    params
+    decompParams % Used to store decomposition parameters
   end
   
   methods
@@ -41,63 +52,44 @@ classdef tfDecomp <  labelledArray
     function obj = tfDecomp(decompType,tfData,tVals,fVals,chanLabels)
       %% Object Constructor Function
       if nargin>0
-
-        if 
         obj.decompType_ = decompType;
         obj.tfData = tfData;
-        obj.tVals = tVals;
-        obj.fVals = fVals;      
+        obj.tVals  = tVals;
+        obj.fVals  = fVals;      
         obj.chanLabels = chanLabels;
       end;
     end
     
-    function out = get.tRange(obj)
-      %% Get Time Range
-      out = [obj.tVals(1) obj.tVals(end)];
-    end
+
+    %% Get Time Range (No Set Method)
+    function out = get.tRange(obj), out = [obj.tVals(1) obj.tVals(end)]; end;
     
-    function out = get.fRange(obj)
-      %% Get Frequency Range
-      out = [obj.fVals(1) obj.fVals(end)];
-    end;
+    %% Get Frequency Range (No Set Method)
+    function out = get.fRange(obj), out = [obj.fVals(1) obj.fVals(end)]; end;
     
     %% Set/Get Methods for obj.decompType
-    function out = get.decompType(obj)
-      out = obj.decompType_;
-    end   
-    function set.decompType(obj,val)
-      obj.decompType_ = val;
-      %error('Cannot set decomposition decompType after creation');
-    end
+    % Just a redirect to the internal pro
+    function out = get.decompType(obj), out = obj.decompType_; end;   
+    function set.decompType(obj,val),   obj.decompType_ = val; end;
     
     %% Set/Get Methods for obj.chanLabels
     function out = get.chanLabels(obj)
-      if isempty(obj.chanLabels_)              
-        % Default channel chanLabels        
-        if isempty(obj.tfData)
-          out = [];
-          return;
-        end;
-        out = cell(1,size(obj.tfData,3));
-        for i = 1:size(obj.tfData,3),
-          out{i} = ['Chan' num2str(i)];
-        end        
-        return;
-      end;      
-      out = obj.chanLabels_;      
-    end % END get.chanLabels
-    
+      out = obj.dimLabels{obj.chanDim};
+    end
+
     function set.chanLabels(obj,val)
-      % Redirect to internal property
-      obj.dimLabels{3} = val;
-%      if isempty(val), obj.chanLabels_ = []; return; end;        
-%      if ischar(val), val = {val}; end;
-%      assert(iscellstr(val),'Labels must be provided as a cell array of strings');      
-%      assert(isempty(obj.tfData)||(numel(val)==size(obj,3)),...
-%        'Number of chanLabels must match number of channels');
-%      obj.chanLabels_ = strtrim(val);
-    end % END set.chanLabels
-    
+      % Assign default channel values if 
+      % provided with an empty array
+      if isempty(val)
+       nChan = obj.size(obj.chanDim);
+       val = cell(nChan,1); 
+       for i = 1:nChan
+         val{i} =  ['Chan' num2str(i)];
+       end
+      end
+      obj.dimLabels{obj.chanDim} = l; 
+    end;
+   
     %% Set/Get Methods for obj.tfData
     function out = get.tfData(obj)
       out = obj.array;
@@ -109,41 +101,26 @@ classdef tfDecomp <  labelledArray
    
     %% Set/Get Methods for obj.tVals
     function out = get.tVals(obj)
-      out = obj.dimValues{2};
+      out = obj.dimValues{tDim};
     end
     
     function set.tVals(obj,val)
-      obj.dimValues{2} = val;
+      obj.dimValues{tDim} = val;
     end
     
     %% Set/Get Methods for obj.fVals
     function out = get.fVals(obj)
       % No default value for frequencies
-      out = obj.fVals_;
+      out = obj.dimValues{fDim};
     end
-    
+   
     function set.fVals(obj,val)
-      if isempty(val), obj.fVals_ = []; return; end;
-      assert(isvector(val)&&numel(val)==size(obj.tfData,1),...
-        'Frequency vector should match size(obj.tfData,1)');
-      assert(issorted(val),'Frequency vector should be sorted');
-      obj.fVals_ = val(:);
+      obj.dimValues{fDim} = val;
     end
-       
-    function out = size(obj,dim)
-      if numel(obj)==1
-       if ~exist('dim','var')
-         out = size(obj.tfData);
-       else
-         out = size(obj.tfData,dim);
-       end;
-      else
-        out = builtin('size',obj);
-      end
-    end       
+          
               
     %% SubCopy
-    function out = subcopy(obj,fIdx,tIdx,chanIdx)
+    function out = subcopy(obj,varargin)
       % Copy object, including only a subset of timepoints and columns. If
       % not provided or empty, indices default to all values.
       %
@@ -153,6 +130,8 @@ classdef tfDecomp <  labelledArray
       if ~exist('tIdx','var'), tIdx = ':'; end;
       if ~exist('chanIdx','var'),chanIdx = ':'; end;      
       
+
+        
       out = obj.copy;                 
       out.tVals_ = out.tVals_(tIdx);
       out.fVals_ = out.fVals_(fIdx);

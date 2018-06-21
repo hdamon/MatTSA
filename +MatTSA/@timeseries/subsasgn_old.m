@@ -1,5 +1,5 @@
 function obj = subsasgn(obj,s,varargin)
-% Overloaded subsasgn for crlBase.type.timeseries objects
+% Overloaded subsasgn for MatTSA.timeseries objects
 %
    switch s(1).type
       case '.'

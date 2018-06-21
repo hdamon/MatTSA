@@ -1,7 +1,7 @@
-classdef windowPlot < crlEEG.gui.uipanel
+classdef windowPlot < guiTools.uipanel
   % Plot for Selecting a Sub-Window of Time Data
   %
-  % classdef windowPlot < crlEEG.gui.uipanel
+  % classdef windowPlot < guiTools.uipanel
   %
   % p = uitools.plots.windowPlot(data,varargin)
   %
@@ -9,7 +9,7 @@ classdef windowPlot < crlEEG.gui.uipanel
   %   data : nSamples x nChannels Data Matrix
   %
   % Param-Value Pairs:
-  %   xvals : x-Axis Values for Each of the N Samples
+  %   tVals : x-Axis Values for Each of the N Samples
   %
   % Events:
   %   updatedOut : Notified when the displayed image is updated through
@@ -41,7 +41,7 @@ classdef windowPlot < crlEEG.gui.uipanel
   
   properties (Dependent = true, Hidden = true)
     windowData   % Deprecated. Replacement is obj.windowSeries
-    windowXVals  % Deprecated. Replacement is obj.windowSeries.xvals
+    windowXVals  % Deprecated. Replacement is obj.windowSeries.tVals
   end
   
   properties (Hidden=true,SetAccess=protected)
@@ -70,11 +70,11 @@ classdef windowPlot < crlEEG.gui.uipanel
       %% Input Parsing
       p = inputParser;
       p.KeepUnmatched = true;
-      p.addRequired('timeseries',@(x) isempty(x)||isa(x,'crlEEG.type.timeseries'));
+      p.addRequired('timeseries',@(x) isempty(x)||isa(x,'MatTSA.timeseries'));
       parse(p,timeseries,varargin{:});
       
       %% Initialize Base Object
-      obj = obj@crlEEG.gui.uipanel(...
+      obj = obj@guiTools.uipanel(...
         'units','pixels',...
         'position',[10 10 500 150]);
       obj.ResizeFcn = @(h,evt) obj.resizeInternals;
@@ -83,7 +83,7 @@ classdef windowPlot < crlEEG.gui.uipanel
       obj.axes = axes('Parent',obj.panel);
       
       %% Initialize Zoom Buttons
-      obj.zoomButtons = crlEEG.gui.widget.dualbutton(...
+      obj.zoomButtons = guiTools.widget.dualbutton(...
         'parent',obj.panel,...
         'leftLabel','-',...
         'rightLabel','+',...
@@ -95,7 +95,7 @@ classdef windowPlot < crlEEG.gui.uipanel
       obj.zoomButtons.BorderType = 'none';
       
       %% Initialize Shift Buttons
-      obj.shiftButtons = crlEEG.gui.widget.dualbutton(...
+      obj.shiftButtons = guiTools.widget.dualbutton(...
         'parent',obj.panel,...
         'title','Shift');
       obj.listenTo{end+1} = addlistener(obj.shiftButtons,'leftPushed',...
@@ -105,7 +105,7 @@ classdef windowPlot < crlEEG.gui.uipanel
       obj.shiftButtons.BorderType = 'none';
       
       %% Initialize Select Buttons
-      obj.selButtons = crlEEG.gui.widget.dualbutton(...
+      obj.selButtons = guiTools.widget.dualbutton(...
         'parent',obj.panel,...
         'title','Select',...
         'leftLabel','Start',...
@@ -125,7 +125,7 @@ classdef windowPlot < crlEEG.gui.uipanel
       obj.windowStart_ = 1;
       obj.windowEnd_   = 1;
       
-      %% Set Data, xvals, and initial windowPlot size, then draw
+      %% Set Data, tVals, and initial windowPlot size, then draw
       obj.timeseries = p.Results.timeseries;
       obj.windowSize = size(obj.timeseries,1);
       
@@ -168,7 +168,7 @@ classdef windowPlot < crlEEG.gui.uipanel
       %
       % Inputs
       % ------
-      %    obj : crlEEG.type.timeseries.interface.windowPlot object
+      %    obj : MatTSA.timeseries.interface.windowPlot object
       %    val : Amount to shift the window.
       %
       % The distance the window is shifted by is computed as:
@@ -225,7 +225,7 @@ classdef windowPlot < crlEEG.gui.uipanel
       %
       % nearest = sampleNum(obj,val)
       %
-      nearest = abs(val-obj.timeseries.xvals);
+      nearest = abs(val-obj.timeseries.tVals);
       nearest = find(nearest==min(nearest));
     end;
     
@@ -275,7 +275,7 @@ classdef windowPlot < crlEEG.gui.uipanel
       %
       % Inputs
       % ------
-      %   obj : crlEEG.type.timeseries.interface.windowPlot object
+      %   obj : MatTSA.timeseries.interface.windowPlot object
       %   windowStart : Index to start selection at
       %   windowEnd   : Index to end selection at
       %
@@ -283,7 +283,7 @@ classdef windowPlot < crlEEG.gui.uipanel
       %
       
       % Get start/end from another windowplot object
-      if isa(windowStart,'crlEEG.gui.timeseries.interface.windowPlot')
+      if isa(windowStart,'MatTSA.gui.timeseries.interface.windowPlot')
         [windowStart, windowEnd] = windowStart.getWindow;
       end
       
@@ -331,17 +331,17 @@ classdef windowPlot < crlEEG.gui.uipanel
     
     function out = get.windowData(obj)
       % Get method for deprecated property
-      warning(['crlEEG.type.timeseries.interface.windowPlot.windowData '...
+      warning(['MatTSA.timeseries.interface.windowPlot.windowData '...
         'is deprecated. Use '...
-        'crlEEG.type.timeseries.interface.windowPlot.windowSeries ' ...
+        'MatTSA.timeseries.interface.windowPlot.windowSeries ' ...
         'instead.']);
       out = obj.windowSeries;
     end
     
     function out = get.windowXVals(obj)
       % Get method for deprecated property
-      warning('This functionality is deprecated. use obj.windowSeries.xvals instead');
-      out = obj.timeseries.xvals(obj.windowStart:obj.windowEnd);
+      warning('This functionality is deprecated. use obj.windowSeries.tVals instead');
+      out = obj.timeseries.tVals(obj.windowStart:obj.windowEnd);
     end
     
     %% Methods for Updating the Data Plot
@@ -365,10 +365,10 @@ classdef windowPlot < crlEEG.gui.uipanel
       % Actually render it.
       obj.timeseries.plot('type','butterfly','ax',obj.axes);
       
-      %crlEEG.type.timeseries.render.butterfly(obj.timeseries,'ax',obj.axes);
+      %MatTSA.timeseries.render.butterfly(obj.timeseries,'ax',obj.axes);
       
       % Catch zero-length X axes definitions.
-      XLim(1) = obj.timeseries.xvals(1); XLim(2) = obj.timeseries.xvals(end);
+      XLim(1) = obj.timeseries.tVals(1); XLim(2) = obj.timeseries.tVals(end);
       if (XLim(1)==XLim(2)),
         XLim(1) = XLim(1) - 0.1;
         XLim(2) = XLim(2) + 0.1;
@@ -396,7 +396,7 @@ classdef windowPlot < crlEEG.gui.uipanel
     
     function updateLine(obj,linenum,idx)
       % Method to update individual vertical lines in a windowPlot
-      XVal = obj.timeseries.xvals(idx);
+      XVal = obj.timeseries.tVals(idx);
       if numel(obj.vLine)==2
         % Can only update if we've already plotted both.
         set(obj.vLine{linenum},'XData',XVal*[1 1])
@@ -411,7 +411,7 @@ classdef windowPlot < crlEEG.gui.uipanel
       
       axes(obj.axes);
       hold on;
-      XVal = obj.timeseries.xvals([obj.windowStart obj.windowEnd]);
+      XVal = obj.timeseries.tVals([obj.windowStart obj.windowEnd]);
       YLim = get(obj.axes,'YLim');
       
       obj.vLine{1} = plot(XVal(1)*[1 1],YLim,'r');
@@ -431,15 +431,15 @@ classdef windowPlot < crlEEG.gui.uipanel
     end;
     
     function set.timeseries(obj,val)
-      % Set Method for crlEEG.type.timeseries.interface.windowPlot
+      % Set Method for MatTSA.timeseries.interface.windowPlot
       %
       %
       
       % Input Checking
       if isempty(val), obj.timeseries_ = []; return; end;
-      crlEEG.util.assert.instanceOf('crlEEG.type.timeseries',val);
-      
-      
+      assert(isa(val,'MatTSA.timeseries'),...
+              'Input must be a MatTSA.timeseries object');      
+            
       if ~isequal(obj.timeseries_,val)
         obj.timeseries_ = val;                
         obj.updateImage;

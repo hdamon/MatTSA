@@ -1,5 +1,5 @@
-classdef togglePlot < crlEEG.gui.uipanel
-  % An interface for crlEEG.type.timeseries data 
+classdef togglePlot < guiTools.uipanel
+  % An interface for MatTSA.timeseries data 
   %
   % classdef toggle < uitools.cnlUIObj
   %
@@ -7,11 +7,11 @@ classdef togglePlot < crlEEG.gui.uipanel
   % plot. Allows interactive selection of a subset of channels for display.
   %
   % Properties:
-  %    yrange : Initially set to 
+  %    dataRange : Initially set to 
   %
   % Settable Properties
   % ---------
-  %    timeseries : crlEEG.type.timeseries object to display
+  %    timeseries : MatTSA.timeseries object to display
   %    
   %    
   % By default, togglePlot displays all channels in the input timeseries.
@@ -42,8 +42,8 @@ classdef togglePlot < crlEEG.gui.uipanel
   end
   
   properties (Dependent)
-    xrange
-    yrange
+    tRange
+    dataRange
   end
   
   properties (Hidden=true)
@@ -58,9 +58,9 @@ classdef togglePlot < crlEEG.gui.uipanel
   end
   
   properties (Access=private)
-    internalXRange
-    internalYRange
-    internalChan    
+    tRange_
+    dataRange_
+    chan_    
     numChan
   end
   
@@ -71,15 +71,15 @@ classdef togglePlot < crlEEG.gui.uipanel
       %% Input Parsing
       p = inputParser;
       p.KeepUnmatched = true;
-      p.addRequired('timeseries',@(x) isempty(x)||isa(x,'crlEEG.type.timeseries'));      
+      p.addRequired('timeseries',@(x) isempty(x)||isa(x,'MatTSA.timeseries'));      
       p.addOptional('ax',[],@(x) ishghandle(x)&&strcmpi(get(x,'type'),'axes'));      
-      p.addParamValue('yrange',[],@(x) isvector(x)&&(numel(x)==2));
+      p.addParamValue('dataRange',[],@(x) isvector(x)&&(numel(x)==2));
       p.addParamValue('scale',1,@(x) isnumeric(x)&&numel(x)==1);
            
       parse(p,timeseries,varargin{:});
                   
       %% Initialize cnlUIObj
-      obj = obj@crlEEG.gui.uipanel(...
+      obj = obj@guiTools.uipanel(...
           'units','pixels',...
           'position',[10 10 600 600]);
       
@@ -117,7 +117,7 @@ classdef togglePlot < crlEEG.gui.uipanel
       obj.Position = [10 10 600 600];
       
       %% Set Property Values
-       obj.yrange = p.Results.yrange;
+       obj.dataRange = p.Results.dataRange;
       obj.scale  = p.Results.scale;
       obj.timeseries   = p.Results.timeseries;      
            
@@ -128,7 +128,7 @@ classdef togglePlot < crlEEG.gui.uipanel
       % Set Desired UIPanel properties
       obj.setUnmatched(p.Unmatched);
       
-      %crlEEG.gui.util.setMinFigSize(gcf,obj);
+      %MatTSA.gui.util.setMinFigSize(gcf,obj);
       
       %% Do Initial Display of Plot
       obj.updateImage;
@@ -142,33 +142,33 @@ classdef togglePlot < crlEEG.gui.uipanel
       end;
     end
     
-    %% Get/Set yrange
-    function val = get.yrange(obj)
-      if ~isempty(obj.internalYRange)
-        val = obj.internalYRange;
+    %% Get/Set dataRange
+    function val = get.dataRange(obj)
+      if ~isempty(obj.dataRange_)
+        val = obj.dataRange_;
       else
-        val = obj.timeseries.yrange;
+        val = obj.timeseries.dataRange;
       end;
     end
     
-    function set.yrange(obj,val)      
-      if ~isequal(obj.internalYRange,val)
-        obj.internalYRange = val;        
+    function set.dataRange(obj,val)      
+      if ~isequal(obj.dataRange_,val)
+        obj.dataRange_ = val;        
         obj.updateImage;
       end;       
     end
     
-    function val = get.xrange(obj)
-      if ~isempty(obj.internalXRange)
-        val = obj.internalXRange;
+    function val = get.tRange(obj)
+      if ~isempty(obj.tRange_)
+        val = obj.tRange_;
       else
-        val = obj.timeseries.xrange;
+        val = obj.timeseries.tRange;
       end;
     end
     
-    function set.xrange(obj,val)      
-      if ~isequal(obj.internalXRange,val)
-        obj.internalXRange = val;        
+    function set.tRange(obj,val)      
+      if ~isequal(obj.tRange_,val)
+        obj.tRange_ = val;        
         if ishghandle(obj.plot)
           keyboard;
         end;
@@ -178,8 +178,8 @@ classdef togglePlot < crlEEG.gui.uipanel
     
     %% Set method for internal timeseries
     function set.timeseries(obj,val)
-      assert(isa(val,'crlEEG.type.timeseries'),...
-              'Must be a crlEEG.type.timeseries object');            
+      assert(isa(val,'MatTSA.timeseries'),...
+              'Must be a MatTSA.timeseries object');            
      % if ~isequal(obj.timeseries,val)
         % Only update if there's a change.
         obj.timeseries = val;  
@@ -190,7 +190,7 @@ classdef togglePlot < crlEEG.gui.uipanel
     
     function checkChan(obj)
       if size(obj.timeseries,2)~=obj.numChan
-        obj.internalChan = [];
+        obj.chan_ = [];
         obj.numChan = size(obj.timeseries,2);
       end;        
     end
@@ -294,19 +294,19 @@ classdef togglePlot < crlEEG.gui.uipanel
         val(2) = size(obj.timeseries,2);
       end;
       
-      if ~isequal(val,obj.internalChan)
-        obj.internalChan = val;
+      if ~isequal(val,obj.chan_)
+        obj.chan_ = val;
         obj.updateImage;
       end;
     end
     
     function val = get.displayRange(obj)
-      if ~isempty(obj.internalChan)
-        if obj.internalChan(2)>size(obj.timeseries,2)
+      if ~isempty(obj.chan_)
+        if obj.chan_(2)>size(obj.timeseries,2)
           % This might be unnecessary?
-          obj.internalChan(2) = size(obj.timeseries,2);
+          obj.chan_(2) = size(obj.timeseries,2);
         end;
-        val = obj.internalChan;
+        val = obj.chan_;
       else
         % Default if it hasn't been set yet.
         nDisp = 30;
@@ -386,12 +386,12 @@ classdef togglePlot < crlEEG.gui.uipanel
           dispChan = obj.displayRange(1):obj.displayRange(2);          
           
           obj.plot = split(obj.timeseries(:,dispChan),obj.axes,...
-            'xrange',obj.xrange,'yrange',obj.yrange,'scale',obj.scale);
+            'tRange',obj.tRange,'dataRange',obj.dataRange,'scale',obj.scale);
         else % Just do a butterfly plot
           obj.plot = butterfly(...
                                                 obj.timeseries,obj.axes,...
-                                                'xrange',obj.xrange,...
-                                                'yrange',obj.yrange,...
+                                                'tRange',obj.tRange,...
+                                                'dataRange',obj.dataRange,...
                                                 'scale',obj.scale);
         end;
         drawnow;

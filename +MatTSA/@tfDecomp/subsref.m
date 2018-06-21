@@ -1,5 +1,5 @@
 function varargout = subsref(obj,s)
-% subsref method for crlEEG.type.timeseries
+% subsref method for MatTSA.timeseries
 %
 %
 % There have been significant modifications to the way the timeseries

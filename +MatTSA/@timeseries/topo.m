@@ -6,7 +6,7 @@ function varargout = topo(timeseries,timepoint,varargin)
 % Inputs
 % ------
 %   timeseries : Input timeseries object
-%                 ( Class : crlBase.type.timeseries )
+%                 ( Class : MatTSA.timeseries )
 %   timepoint  : Index into timeseries to plot topographic map of.
 %   
 % Optional Inputs
@@ -28,7 +28,7 @@ function varargout = topo(timeseries,timepoint,varargin)
 %% Input Parsing
 p = inputParser;
 p.KeepUnmatched = true;
-p.addRequired('timeseries',@(x) isa(x,'crlBase.type.timeseries'));
+p.addRequired('timeseries',@(x) isa(x,'MatTSA.timeseries'));
 p.addRequired('timepoint',@(x) isnumeric(x)&&isscalar(x));
 p.addOptional('ax',[],@(x) ishghandle(x)&&strcmpi(get(x,'type'),'axes'));
 p.addParamValue('headNet',[],@(x) isa(x,'headNet'));

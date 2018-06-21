@@ -1,4 +1,4 @@
-classdef dualPlot < crlEEG.gui.uipanel
+classdef dualPlot < guiTools.uipanel
   % Tool for exploring time series timeseries
   %
   % classdef dualPlot < uitools.baseobjs.gui
@@ -33,7 +33,7 @@ classdef dualPlot < crlEEG.gui.uipanel
     function obj = dualPlot(timeseries,varargin)      
       p = inputParser;
       p.KeepUnmatched = true;
-      p.addRequired('timeseries',@(x) isa(x,'crlEEG.type.timeseries'));
+      p.addRequired('timeseries',@(x) isa(x,'MatTSA.timeseries'));
       p.addParameter('Parent',[]);
       p.addParamValue('title','TITLE', @(x) ischar(x));
       parse(p,timeseries,varargin{:});           
@@ -43,27 +43,27 @@ classdef dualPlot < crlEEG.gui.uipanel
       parent = p.Results.Parent;
       if isempty(parent), parent = figure; end;
       
-      obj = obj@crlEEG.gui.uipanel('parent',parent,p.Unmatched); %...     
-      crlEEG.gui.util.setMinFigSize(gcf,obj.Position(1:2),obj.Position(3:4),5);
+      obj = obj@guiTools.uipanel('parent',parent,p.Unmatched); %...     
+      guiTools.util.setMinFigSize(gcf,obj.Position(1:2),obj.Position(3:4),5);
                  
       % Set up the channel selection object
-      obj.chanselect       = crlEEG.gui.util.selectChannelsFromTimeseries;
+      obj.chanselect       = MatTSA.selectChannelsFromTimeseries;
       obj.chanselectbutton = obj.chanselect.editButton;
              
       %% Initialize Mini Plot
-      obj.miniplot = crlEEG.gui.timeseries.interface.windowPlot(...
+      obj.miniplot = MatTSA.gui.timeseries.windowPlot(...
         obj.chanselect.output,...
         'parent',obj.panel,...       
         'BorderType','none');
                                
       %% Initialize Toggle Plot
-      obj.toggleplot = crlEEG.gui.timeseries.interface.togglePlot(...
+      obj.toggleplot = MatTSA.gui.timeseries.togglePlot(...
                                 obj.chanselect.output,...
                                 'parent',obj.panel,...
                                 'BorderType','none');
             
       %% Initialize Time Controls
-      obj.playcontrols = crlEEG.gui.widget.timeplay(...
+      obj.playcontrols = guiTools.widget.timeplay(...
         'parent',obj.panel,...
         'units','pixels',...
         'position',[325 5 400 30],...                
@@ -81,7 +81,7 @@ classdef dualPlot < crlEEG.gui.uipanel
       %pause(0.1);      
       %setUnmatched(obj,p.Unmatched);
       
-      %crlEEG.gui.util.setMinFigSize(gcf,obj);      
+      %MatTSA.gui.util.setMinFigSize(gcf,obj);      
       %set(obj,'Units','normalized');
       
       obj.ResizeFcn = @(h,evt) obj.resizeInternals;
@@ -89,7 +89,10 @@ classdef dualPlot < crlEEG.gui.uipanel
       
       % Copy without decompositions to speed things up.
       tmp = p.Results.timeseries.copy;
+      if isprop(tmp,'decomposition')        
+        % Really ought to be moved out of this package.
       tmp.decomposition = [];
+      end;
       
       obj.chanselect.input = tmp;
       obj.miniplot.windowEnd = size(p.Results.timeseries,1);
@@ -236,8 +239,8 @@ classdef dualPlot < crlEEG.gui.uipanel
       
       pos = get(obj.toggleplot.axes,'CurrentPoint');
       %disp(['Current Position: ' num2str(pos(1))]);
-      xvals = obj.miniplot.windowSeries.xvals;
-      idx = find(abs(xvals-pos(1))==min(abs(xvals-pos(1))));
+      tVals = obj.miniplot.windowSeries.tVals;
+      idx = find(abs(tVals-pos(1))==min(abs(tVals-pos(1))));
       idx = idx(1);
       range = obj.miniplot.windowStart:obj.miniplot.windowEnd;
       %disp(['Current Idx: ' num2str(range(idx))]);
@@ -254,7 +257,7 @@ classdef dualPlot < crlEEG.gui.uipanel
       end;
       if ~isempty(obj.playcontrols.currIdx)
         if ismember(obj.playcontrols.currIdx,range)
-          xVal = obj.miniplot.timeseries.xvals(obj.playcontrols.currIdx);
+          xVal = obj.miniplot.timeseries.tVals(obj.playcontrols.currIdx);
           yRange = get(obj.toggleplot.axes,'YLim');
           axes(obj.toggleplot.axes); hold on;
           tmp = get(obj.toggleplot.axes,'ButtonDownFcn');
@@ -276,7 +279,7 @@ classdef dualPlot < crlEEG.gui.uipanel
     function updateToggle(obj)      
       % Callback to update toggle plot when miniplot is changed
       obj.toggleplot.timeseries = obj.miniplot.windowSeries;
-      obj.toggleplot.yrange = obj.chanselect.output.yrange;
+      obj.toggleplot.dataRange = obj.chanselect.output.dataRange;
     end;
     
     function updateImage(obj)
@@ -288,7 +291,7 @@ classdef dualPlot < crlEEG.gui.uipanel
       obj.toggleplot.timeseries = timeseries;     
       
       % Update toggleplot with range of full dataset
-      obj.toggleplot.yrange = obj.chanselect.output.yrange;                      
+      obj.toggleplot.dataRange = obj.chanselect.output.dataRange;                      
     end
     
     function keyPress(obj,h,evt)

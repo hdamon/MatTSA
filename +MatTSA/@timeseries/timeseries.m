@@ -27,7 +27,7 @@ classdef timeseries < labelledArray
   % simplify the way in which EEG object can be accessed, sliced, and
   % referenced.
   %
-  % Toward that end, crlBase.type.timeseries objects are referenced slightly
+  % Toward that end, MatTSA.timeseries objects are referenced slightly
   % differently whether they are 
   % 
   %
@@ -69,7 +69,7 @@ classdef timeseries < labelledArray
       if nargin>0
         p = inputParser;
         p.addRequired('data',@(x) (isnumeric(x)&&ismatrix(x))||...
-                                    isa(x,'crlBase.type.timeseries'));
+                                    isa(x,'MatTSA.timeseries'));
         p.addParameter('chanLabels',[],@(x) isempty(x)||iscellstr(x));
         p.addParameter('chanType',[],@(x) ischar(x)||iscellstr(x));
         p.addParameter('tVals',[],@(x) isempty(x)||isvector(x));
@@ -79,7 +79,7 @@ classdef timeseries < labelledArray
                         
         p.parse(varargin{:});
         
-        if isa(p.Results.data,'crlBase.type.timeseries')
+        if isa(p.Results.data,'MatTSA.timeseries')
           obj = obj.copyValuesFrom(p.Results.data);
           return;
         end                
@@ -98,13 +98,13 @@ classdef timeseries < labelledArray
       end;
     end
          
-    %% Main crlBase.type.timeseries plotting function
+    %% Main MatTSA.timeseries plotting function
     function out = plot(obj,varargin)
-      % Overloaded plot function for crlBase.type.timeseries objects
+      % Overloaded plot function for MatTSA.timeseries objects
       %
       % Inputs
       % ------
-      %   obj : crlBase.type.timeseries object
+      %   obj : MatTSA.timeseries object
       % 
       % Param-Value Pairs
       % -----------------
@@ -128,7 +128,7 @@ classdef timeseries < labelledArray
             
       switch lower(p.Results.type)
         case 'dualplot'
-          out = crlBase.gui.timeseries.interface.dualPlot(obj,p.Unmatched);
+          out = MatTSA.gui.timeseries.dualPlot(obj,p.Unmatched);
         case 'butterfly'
           out = butterfly(obj,p.Unmatched);
         case 'split'
@@ -248,7 +248,7 @@ classdef timeseries < labelledArray
       % function removeChannel(obj,label)
       %
       % Inputs
-      %    obj : crlBase.type.timeseries object
+      %    obj : MatTSA.timeseries object
       %  label : List of channel chanLabels to remove. Can be either a string,
       %           or a cell array of strings.
       %
@@ -438,7 +438,7 @@ classdef timeseries < labelledArray
      function obj = copyValuesFrom(obj,valObj)
       % Individually copy values from a second object
       obj = obj.copyValuesFrom@labelledArray(valObj);      
-      if isa(valObj,'crlBase.type.timeseries')
+      if isa(valObj,'MatTSA.timeseries')
        % Can only copy these if it's actually a timeseries object.
        obj.sampleRate = valObj.sampleRate;
        obj.dataUnits  = valObj.dataUnits;
