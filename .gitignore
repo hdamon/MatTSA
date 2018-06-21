@@ -1,0 +1,9 @@
+External/*
+*.swp
+*~
+*.mexmaci64
+*.mexa64
+*.nhdr
+*.raw
+*.nrrd
+*.mat
