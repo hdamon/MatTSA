@@ -24,17 +24,16 @@ function plotOut = split(tseries,varargin)
 % Part of the cnlEEG Project
 %
 
-import crlBase.util.validation.isNumericVector
 
 %% Input Parsing
 p = inputParser;
 p.addRequired('tseries',@(x) isa(x,'MatTSA.timeseries'));
 p.addOptional('ax',[],@(x) ishghandle(x)&&strcmpi(get(x,'type'),'axes'));
-p.addParamValue('tRange',tseries.tRange,@(x) isNumericVector(x,2));
-p.addParamValue('dataRange',tseries.dataRange,@(x) isNumericVector(x,2));
-p.addParamValue('chandisp',[],@(x) isNumericVector(x));
-p.addParamValue('timedisp',[],@(x) isNumericVector(x,2));
-p.addParamValue('sampdisp',[],@(x) isNumericVector(x,2));
+p.addParamValue('tRange',tseries.tRange,@(x) validateattributes(x,{'numeric'},{'vector','numel',2}));
+p.addParamValue('dataRange',tseries.dataRange,@(x) validateattributes(x,{'numeric'},{'vector','numel',2}));
+p.addParamValue('chandisp',[],@(x) validateattributes(x,{'numeric'},{'vector'}));
+p.addParamValue('timedisp',[],@(x) validateattributes(x,{'numeric'},{'vector','numel',2}));
+p.addParamValue('sampdisp',[],@(x) validateattributes(x,{'numeric'},{'vector','numel',2}));
 p.addParamValue('scale',1,@(x) isnumeric(x)&&numel(x)==1);
 p.addParamValue('plotAll',false,@(x) islogical(x));
 p.parse(tseries,varargin{:});
