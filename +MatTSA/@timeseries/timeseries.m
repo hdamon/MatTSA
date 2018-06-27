@@ -58,6 +58,7 @@ classdef timeseries < labelledArray
   end;
         
   properties (Access=private, Constant)
+    % Useful to prevent confusion elsewhere
     tDim    = 1;
     chanDim = 2;
   end
@@ -68,6 +69,11 @@ classdef timeseries < labelledArray
       
       %% Input Parsing
       obj = obj@labelledArray;
+      
+      dims(obj.tDim) = arrayDim('dimName','time');
+      dims(obj.chanDim) = arrayDim('dimName','channel');      
+      obj.dimensions = dims;
+      
       if nargin>0
         p = inputParser;
         p.addRequired('data',@(x) (isnumeric(x)&&ismatrix(x))||...
@@ -96,9 +102,6 @@ classdef timeseries < labelledArray
         obj.sampleRate = p.Results.sampleRate;
         obj.dataUnits  = p.Results.dataUnits;
         
-        % Set Dimension Names
-        obj.dimNames{obj.tDim} = 'time';
-        obj.dimNames{obj.chanDim} = 'channel';
       end;
     end         
     
@@ -345,7 +348,7 @@ classdef timeseries < labelledArray
         cellVal = val;
       end;
             
-      obj.dimUnits_{obj.chanDim} = cellVal;                        
+      obj.dimUnits{obj.chanDim} = cellVal;                        
     end    
     
     %% Get/Set Methods for Data
@@ -366,12 +369,12 @@ classdef timeseries < labelledArray
     function set.chanLabels(obj,val)
       if isempty(val) 
         val = cell(1,size(obj.data,2));
-        for i = 1:size(obj.data,2),
+        for i = 1:size(obj.data,2)
           val{i} = ['Chan' num2str(i)];
         end      
       end;
       
-      obj.dimLabels = {2, val};      
+      obj.dimLabels{2} = val;      
     end % END set.chanLabels
             
     %% Get/Set Methods for obj.sampleRate

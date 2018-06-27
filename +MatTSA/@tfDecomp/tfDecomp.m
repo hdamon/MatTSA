@@ -18,7 +18,7 @@ classdef tfDecomp <  labelledArray
   
   properties (Dependent = true)
     decompType   
-
+    dataType
     % Channel Labels
     chanLabels
 
@@ -34,6 +34,7 @@ classdef tfDecomp <  labelledArray
 
   properties (Access=protected)
     decompType_
+    dataType_
   end
   
   properties (Access=private,Constant)
@@ -49,18 +50,43 @@ classdef tfDecomp <  labelledArray
   
   methods
     
-    function obj = tfDecomp(decompType,tfData,tVals,fVals,chanLabels)
+    function obj = tfDecomp(tfData,varargin)
       %% Object Constructor Function
+      
+      % Configure standard dimensions
+      dim(obj.fDim)    = arrayDim('dimName','frequency');
+      dim(obj.tDim)    = arrayDim('dimName','time');
+      dim(obj.chanDim) = arrayDim('dimName','channel');
+      obj.dimensions = dim;
+           
       if nargin>0
-        obj.decompType_ = decompType;
+        p = inputParser;
+        p.addParameter('decompType','',@ischar);
+        p.addParameter('dataType','',@ischar);
+        p.addParameter('tVals',[],@(x) isnumeric(x)&&isvector(x));
+        p.addParameter('fVals',[],@(x) isnumeric(x)&&isvector(x));
+        p.addParameter('chanLabels',[],@(x) ischar(x)||iscellstr(x));
+        p.parse(varargin{:});
+        
         obj.tfData = tfData;
-        obj.tVals  = tVals;
-        obj.fVals  = fVals;      
-        obj.chanLabels = chanLabels;
+        obj.decompType = p.Results.decompType;
+        obj.dataType   = p.Results.dataType;
+        obj.tVals      = p.Results.tVals;
+        obj.fVals      = p.Results.fVals;
+        obj.chanLabels = p.Results.chanLabels;
+               
       end;
     end
     
 
+    function out = get.dataType(obj)
+      out = obj.dataType_;
+    end;
+    
+    function set.dataType(obj,val)
+      obj.dataType_ = val;
+    end;
+    
     %% Get Time Range (No Set Method)
     function out = get.tRange(obj), out = [obj.tVals(1) obj.tVals(end)]; end;
     
@@ -118,8 +144,23 @@ classdef tfDecomp <  labelledArray
       obj.dimValues{obj.fDim} = val;
     end
           
-              
+    function out = cat(dim,obj,a,varargin)      
 
+      assert(isEmptyOrEqual(obj.decompType,a.decompType),...
+                  'Inconsistent decompType in concatenation');
+      assert(isEmptyOrEqual(obj.dataType,a.dataType),...
+                  'Inconsistent dataType in concatenation');
+             
+      out = cat@labelledArray(dim,obj,a);
+      if isempty(out.decompType), out.decompType = a.decompType; end;
+      if isempty(out.dataType), out.dataType = a.dataType; end;
+                  
+      function isValid = isEmptyOrEqual(A,B)
+        isValid = isempty(A)||isempty(B);
+        isValid = isValid||isequal(A,B);               
+      end
+      
+    end;
     
     function out = subtract_baseline(obj,baseline)
       % Subtract a baseline frequency spectrum from all tfData columns.      
@@ -294,18 +335,21 @@ classdef tfDecomp <  labelledArray
         imgRange = p.Results.range;
       end
       
-      %% If log requested
-      if p.Results.logImg
-        showImg = log10(showImg);
-        imgRange = log10(imgRange);
-      end;            
-      
       %% Get the RGB Image
       cmap = p.Results.colormap;    
       if isempty(cmap.range)||isequal(cmap.range,[0 1])
         % Only override if it's the default
         cmap.range = imgRange;
-      end;
+      end;      
+      
+      %% If log requested
+      if p.Results.logImg
+        showImg = log10(showImg);
+        imgRange = log10(imgRange);
+        cmap.range = imgRange;
+      end;            
+      
+
       [rgb,alpha] = cmap.img2rgb(showImg);
       tData = obj.tVals(idxT);
       fData = obj.fVals(idxF);
@@ -334,8 +378,11 @@ classdef tfDecomp <  labelledArray
     function out = PSD(obj)
       % Convert a time-frequency decomposition to power spectral density                  
       out = obj.copy;
-      out.tfData = abs(obj.tfData).^2;
-      out.decompType = [obj.decompType '_PSD'];
+      if ~isequal(obj.dataType,'PSD')      
+        out.tfData = abs(out.tfData).^2;
+        out.decompType = [obj.decompType '_PSD'];
+        out.dataType = 'PSD';      
+      end;
     end
     
     function out = abs(obj)
@@ -348,11 +395,12 @@ classdef tfDecomp <  labelledArray
     function out = PLF(obj)  
       % Convert a time-frequency decomposition to Phase Locking Factor
       %
-      % (NEEDS TO BE AVERAGED ACROSS A LOT OF DECOMPOSITIONS)      
+      % (NEEDS TO BE AVERAGED ACROSS A LOT OF DECOMPOSITIONS)            
       out = obj.copy;
       out.decompType = [obj.decompType '_PLF'];
       tmp = obj.tfData;
       out.tfData = tmp./abs(tmp);
+      out.dataType = 'PLF';
     end;
               
 
