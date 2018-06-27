@@ -415,6 +415,9 @@ classdef timeseries < labelledArray
     
     %% Get/Set Methods for obj.dataRange
     function rangeOut = get.dataRange(obj)
+      if isempty(obj.dataRange_)
+        obj.updateDataRange(true);
+      end;
       rangeOut = obj.dataRange_;
 %       dataChans = obj.getChannelsByType('data');   
 %       if ~any(dataChans)
@@ -427,13 +430,17 @@ classdef timeseries < labelledArray
       error('obj.dataRange is derived from obj.data');
     end;
         
-    function updateDataRange(obj)
-      dataChans = obj.getChannelsByType('data');   
+    function updateDataRange(obj,force)
+      if isempty(obj.dataRange_)&&~force      
+        return;
+      end;
+      
+      dataChans = obj.getChannelsByType('data');
       if ~any(dataChans)
         obj.dataRange_ = [0 1]; return;
       end;
       obj.dataRange_ = [min(min(obj.data(:,dataChans))) ...
-                       max(max(obj.data(:,dataChans)))];  
+        max(max(obj.data(:,dataChans)))];
     end
     
     %% Get/Set Methods for obj.tRange
