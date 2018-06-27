@@ -161,31 +161,32 @@ DT = 1./tseries.sampleRate;
 dataChans = logical(tseries.isChannelType('data'));
 data = tseries.data(:,dataChans);
 
-% Get Output Size and Preallocate
-[WAVE,PERIOD,SCALE,COI] = wavelet(data(:,1),DT,PAD,DJ,S0,J1,MOTHER,PARAM);
-F = flip(1./PERIOD);
+% Defaults from wavelet()
+if (S0 ==-1 ), S0 = 2*DT; end;
+if (DJ ==-1 ), DJ = 1/4; end;
+nOut = fix((log(size(data,1)*DT/S0)/log(2))/DJ)+1;
 
-if isempty(p.Results.freqs)  
-  % Default wavelet frequencies
-  WAVE = zeros([size(WAVE,1) size(data)]);
-  Fout = flip(1./PERIOD);
-  doInterp = false;
-else
-  % Specified frequencies to interpolate to
-  WAVE = zeros([numel(p.Results.freqs) size(data)]);
-  Fout = p.Results.freqs;
+doInterp = false;
+if ~isempty(p.Results.freqs)        
   doInterp = true;
+  nOut = numel(p.Results.freqs);
 end
 
+WAVE = zeros([nOut size(data)]);
 for i = 1:size(data,2)  
 %  [WAVE(:,:,i),PERIOD,SCALE,COI] = wavelet(data(:,i),DT,PAD,DJ,S0,J1,MOTHER,PARAM);
   [tmpWAVE,PERIOD,SCALE,COI] = wavelet(data(:,i),DT,PAD,DJ,S0,J1,MOTHER,PARAM);  
+  
   tmpWAVE = flip(tmpWAVE,1);
+  F = flip(1./PERIOD);
+  Fout = F;  
   
   if doInterp
     % Interpolate, if needed
+    Fout = p.Results.freqs;
     tmpWAVE = interp1(F,tmpWAVE,Fout);
   end
+  
   WAVE(:,:,i) = tmpWAVE;
 end
 
