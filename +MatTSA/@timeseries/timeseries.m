@@ -53,6 +53,8 @@ classdef timeseries < labelledArray
   properties (Access=protected)   
     sampleRate_;   
     chanType_;
+    chanInfo_;
+    dataRange_;
   end;
         
   properties (Access=private, Constant)
@@ -98,8 +100,8 @@ classdef timeseries < labelledArray
         obj.dimNames{obj.tDim} = 'time';
         obj.dimNames{obj.chanDim} = 'channel';
       end;
-    end
-         
+    end         
+    
     %% Main MatTSA.timeseries plotting function
     function out = plot(obj,varargin)
       % Overloaded plot function for MatTSA.timeseries objects
@@ -159,7 +161,9 @@ classdef timeseries < labelledArray
       
       % Boolean Data Channels
       boolChan = obj.getChannelsByType('bool');
-      out(:,boolChan) = 0.75*obj.dataRange(2)*out(:,boolChan); 
+      if ~isempty(boolChan)
+        out(:,boolChan) = 0.75*obj.dataRange(2)*out(:,boolChan); 
+      end;
       
       % Auxilliary Channels
       auxChan = obj.getChannelsByType('aux');      
@@ -274,7 +278,11 @@ classdef timeseries < labelledArray
     function out = isChannelType(obj,val)
       % Returns a logical array that is true if a channels dataUnits type
       % matches val
-      out = cellfun(@(x) isequal(x,val),obj.chanType);
+      if isempty(obj.chanType)
+        out = false(size(obj,2),1);
+      else
+        out = cellfun(@(x) isequal(x,val),obj.chanType);
+      end
     end
     
     function out = getChannelsByType(obj,val)
@@ -298,16 +306,16 @@ classdef timeseries < labelledArray
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     %% Get/Set Methods for obj.chanType
-    function out = get.chanType(obj)
-      if ~isempty(obj.chanType_)
-        out = obj.chanType_;
-      else
-        [out{1:size(obj,2)}] = deal('data');
+    function out = get.chanType(obj)      
+      if isempty(obj.chanType_)
+        % Initialize to defaults if empty
+        obj.chanType = [];
       end;
+      out = obj.chanType_;      
     end; % END get.chanType    
     
     function set.chanType(obj,val)
-      if isempty(val), obj.chanType_ = []; return; end;
+      if isempty(val), val = 'data'; end;
       assert(ischar(val)||iscellstr(val),...
               'chanType must be a character string or cell array of strings');
       if ~iscellstr(val)
@@ -318,7 +326,8 @@ classdef timeseries < labelledArray
       
       assert(numel(cellVal)==size(obj,2),...
               'chanType must have a number of elements equal to the number of channels');
-      obj.chanType_ = cellVal;                        
+      obj.chanType_ = cellVal;
+      obj.updateDataRange;
     end % END set.chanType
                 
     %% Get/Set Methods for obj.dataUnits
@@ -346,6 +355,7 @@ classdef timeseries < labelledArray
     
     function set.data(obj,val)
       obj.array = val;
+      obj.updateDataRange;
     end
            
     %% Set/Get Methods for obj.chanLabels
@@ -402,17 +412,27 @@ classdef timeseries < labelledArray
     
     %% Get/Set Methods for obj.dataRange
     function rangeOut = get.dataRange(obj)
-      dataChans = obj.getChannelsByType('data');   
-      if ~any(dataChans)
-        rangeOut = [0 1]; return;
-      end;
-      rangeOut = [min(min(obj.data(:,dataChans))) ...
-                  max(max(obj.data(:,dataChans)))];                
+      rangeOut = obj.dataRange_;
+%       dataChans = obj.getChannelsByType('data');   
+%       if ~any(dataChans)
+%         rangeOut = [0 1]; return;
+%       end;
+%       rangeOut = [min(min(obj.data(:,dataChans))) ...
+%                   max(max(obj.data(:,dataChans)))];                
     end;                  
     function set.dataRange(obj,~)
       error('obj.dataRange is derived from obj.data');
     end;
         
+    function updateDataRange(obj)
+      dataChans = obj.getChannelsByType('data');   
+      if ~any(dataChans)
+        obj.dataRange_ = [0 1]; return;
+      end;
+      obj.dataRange_ = [min(min(obj.data(:,dataChans))) ...
+                       max(max(obj.data(:,dataChans)))];  
+    end
+    
     %% Get/Set Methods for obj.tRange
     function rangeOut = get.tRange(obj)
       rangeOut = [obj.tVals(1) obj.tVals(end)];
@@ -471,7 +491,8 @@ classdef timeseries < labelledArray
     %% SubCopy
     function out = subcopy(obj,varargin)
       % Not really necessary, but included for the future.                
-      out = obj.subcopy@labelledArray(varargin{:});       
+      [out,dimIdx] = obj.subcopy@labelledArray(varargin{:});       
+      out.chanType_ = out.chanType_(dimIdx{2});
       
       if ~isempty(obj.decomposition)
         decompNames = fields(obj.decomposition);

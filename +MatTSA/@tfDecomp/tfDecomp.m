@@ -223,9 +223,9 @@ classdef tfDecomp <  labelledArray
               @(x) isempty(x)||(isnumeric(x)&&isvector(x)&&(numel(x)==2)));
       p.addParameter('showChan',1);
       p.addParameter('logImg',false);
-      p.addParameter('showBand',[],@(x) isempty(x)||(isnumeric(x)&&isvector(x))); 
-      p.addParameter('showTimes',[],@(x) isempty(x)||(isnumeric(x)&&isvector(x))); 
-      p.addParameter('parent',[],@(x) ishghandle(x));
+      p.addParameter('showBand' , [] , @(x) isempty(x)||(isnumeric(x)&&isvector(x))); 
+      p.addParameter('showTimes', [] , @(x) isempty(x)||(isnumeric(x)&&isvector(x))); 
+      p.addParameter('parent'   , [] , @(x) ishghandle(x));
       p.addParameter('colormap',guiTools.widget.alphacolor,@(x) isa(x,'guiTools.widget.alphacolor'));
       p.parse(varargin{:});
       
@@ -331,27 +331,27 @@ classdef tfDecomp <  labelledArray
       
     end % imagesc()
       
-    function out = PSD(obj,varargin)
+    function out = PSD(obj)
       % Convert a time-frequency decomposition to power spectral density                  
       out = obj.copy;
-      out.tfData = abs(obj.subsrefTFX(varargin{:})).^2;
+      out.tfData = abs(obj.tfData).^2;
       out.decompType = [obj.decompType '_PSD'];
     end
     
-    function out = abs(obj,varargin)
+    function out = abs(obj)
       % Convert a time-frequency decomposition to spectral magnitude            
       out = obj.copy;
-      out.tfData = abs(obj.subsrefTFX(varargin{:}));
+      out.tfData = abs(obj.tfData);
       out.decompType = [obj.decompType '_ABS'];      
     end;
     
-    function out = PLF(obj,varargin)  
+    function out = PLF(obj)  
       % Convert a time-frequency decomposition to Phase Locking Factor
       %
       % (NEEDS TO BE AVERAGED ACROSS A LOT OF DECOMPOSITIONS)      
       out = obj.copy;
       out.decompType = [obj.decompType '_PLF'];
-      tmp = obj.subsrefTFX(varargin{:});
+      tmp = obj.tfData;
       out.tfData = tmp./abs(tmp);
     end;
               

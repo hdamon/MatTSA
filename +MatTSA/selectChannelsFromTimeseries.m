@@ -76,7 +76,7 @@ classdef selectChannelsFromTimeseries < handle
     function editChannels(obj)
       % Raise or open a GUI to edit selected channels
       %
-      if ~crlBase.gui.util.parentfigure.raise(obj.gui)
+      if ~guiTools.util.parentfigure.raise(obj.gui)
         
         f = figure('Units','pixels','Position',obj.setPos);
         obj.gui = uicontrol(f,'Style','listbox',...

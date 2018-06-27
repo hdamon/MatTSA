@@ -38,11 +38,11 @@ p.addParamValue('scale',1,@(x) isnumeric(x)&&numel(x)==1);
 p.addParamValue('plotAll',false,@(x) islogical(x));
 p.parse(tseries,varargin{:});
 
-ax = p.Results.ax;
-tRange = p.Results.tRange;
-dataRange = p.Results.dataRange;
-scale = p.Results.scale;
-tVals = tseries.tVals;
+ax         = p.Results.ax;
+tRange     = p.Results.tRange;
+dataRange  = p.Results.dataRange;
+scale      = p.Results.scale;
+tVals      = tseries.tVals;
 chanLabels = tseries.chanLabels;
 
 %% If no axis provided, open a new figure with Axes

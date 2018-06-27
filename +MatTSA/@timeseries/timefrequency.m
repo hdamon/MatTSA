@@ -161,25 +161,35 @@ DT = 1./tseries.sampleRate;
 dataChans = logical(tseries.isChannelType('data'));
 data = tseries.data(:,dataChans);
 
-for i = 1:size(data,2)  
-%[WAVE(:,:,i),PERIOD,SCALE,COI,DJ, PARAMOUT, K] = contwt(data(:,i),DT,PAD,DJ,S0,J1,MOTHER,PARAM);
-[WAVE(:,:,i),PERIOD,SCALE,COI] = wavelet(data(:,i),DT,PAD,DJ,S0,J1,MOTHER,PARAM);
-end
-
-WAVE = flip(WAVE,1);
+% Get Output Size and Preallocate
+[WAVE,PERIOD,SCALE,COI] = wavelet(data(:,1),DT,PAD,DJ,S0,J1,MOTHER,PARAM);
 F = flip(1./PERIOD);
 
-
-if ~isempty(p.Results.freqs)
-  % Interpolate to desired frequencies.
+if isempty(p.Results.freqs)  
+  % Default wavelet frequencies
+  WAVE = zeros([size(WAVE,1) size(data)]);
+  Fout = flip(1./PERIOD);
+  doInterp = false;
+else
+  % Specified frequencies to interpolate to
+  WAVE = zeros([numel(p.Results.freqs) size(data)]);
   Fout = p.Results.freqs;
-  newWAVE = interp1(F,WAVE,Fout);
-  
-  WAVE = newWAVE;
-  F = Fout;  
+  doInterp = true;
 end
 
-out = MatTSA.tfDecomp('wavelet',WAVE,tseries.tVals,F,tseries.chanLabels(dataChans));
+for i = 1:size(data,2)  
+%  [WAVE(:,:,i),PERIOD,SCALE,COI] = wavelet(data(:,i),DT,PAD,DJ,S0,J1,MOTHER,PARAM);
+  [tmpWAVE,PERIOD,SCALE,COI] = wavelet(data(:,i),DT,PAD,DJ,S0,J1,MOTHER,PARAM);  
+  tmpWAVE = flip(tmpWAVE,1);
+  
+  if doInterp
+    % Interpolate, if needed
+    tmpWAVE = interp1(F,tmpWAVE,Fout);
+  end
+  WAVE(:,:,i) = tmpWAVE;
+end
+
+out = MatTSA.tfDecomp('wavelet',WAVE,tseries.tVals,Fout,tseries.chanLabels(dataChans));
 out.decompParams = varargin;
 
 end

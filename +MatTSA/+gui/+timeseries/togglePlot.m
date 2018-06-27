@@ -61,7 +61,7 @@ classdef togglePlot < guiTools.uipanel
     tRange_
     dataRange_
     chan_    
-    numChan
+    numChan_
   end
   
   methods
@@ -117,9 +117,9 @@ classdef togglePlot < guiTools.uipanel
       obj.Position = [10 10 600 600];
       
       %% Set Property Values
-       obj.dataRange = p.Results.dataRange;
-      obj.scale  = p.Results.scale;
-      obj.timeseries   = p.Results.timeseries;      
+      obj.dataRange  = p.Results.dataRange;
+      obj.scale      = p.Results.scale;
+      obj.timeseries = p.Results.timeseries;      
            
             
       % Select Channels to Display. Up to 30 is the default.
@@ -189,9 +189,9 @@ classdef togglePlot < guiTools.uipanel
     end
     
     function checkChan(obj)
-      if size(obj.timeseries,2)~=obj.numChan
+      if isempty(obj.numChan_)||(size(obj.timeseries,2)~=obj.numChan_)
         obj.chan_ = [];
-        obj.numChan = size(obj.timeseries,2);
+        obj.numChan_ = size(obj.timeseries,2);
       end;        
     end
     

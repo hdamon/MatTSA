@@ -77,7 +77,7 @@ pOut.listener = addlistener(p2.toggleplot,'updatedOut',@(h,evt) updateDecomp);
   function updateDecomp
     % Function to update displayed time in each tfDecomp
     for k = 1:numel(p1)
-      p1(k).showTimes = p2.toggleplot.xrange;
+      p1(k).showTimes = p2.toggleplot.tRange;
     end;
   end
 
