@@ -431,6 +431,7 @@ classdef timeseries < labelledArray
     end;
         
     function updateDataRange(obj,force)
+      if ~exist('force','var'),force = false; end;
       if isempty(obj.dataRange_)&&~force      
         return;
       end;
