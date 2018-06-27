@@ -62,7 +62,7 @@ switch p.Results.method
   case 'eeglab'
     out = eeglab(tseries,p.Unmatched);
   case 'wavelet'
-    out = contwave(tseries,p.Unmatched);
+    out = continuousWaveletDecomp(tseries,p.Unmatched);
   otherwise
     error('Unknown decomposition type');
 end;
@@ -114,7 +114,7 @@ out.params = varargin;
 
 end
 
-function out = contwave(tseries,varargin)
+function out = continuousWaveletDecomp(tseries,varargin)
 % Compute a time-frequency decomposition using the continuous wavelet
 % transform
 %
@@ -179,8 +179,18 @@ if ~isempty(p.Results.freqs)
   F = Fout;  
 end
 
-out = MatTSA.tfDecomp('wavelet',WAVE,tseries.tVals,F,tseries.chanLabels(dataChans));
+out = MatTSA.tfDecomp(WAVE,'decompType','wavelet',...
+                           'dataType','complex',...
+                           'tVals',tseries.tVals,...
+                           'fVals',F,...
+                           'chanLabels',tseries.chanLabels(dataChans));
+
+                         
+waveParams.SCALE = SCALE;
+waveParams.COI   = COI;
 out.decompParams = varargin;
+out.decompParams = [out.decompParams {waveParams}];
+
 
 end
 
