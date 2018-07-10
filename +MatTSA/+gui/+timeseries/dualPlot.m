@@ -48,7 +48,7 @@ classdef dualPlot < guiTools.uipanel
                  
       % Set up the channel selection object
       obj.chanselect       = MatTSA.selectChannelsFromTimeseries;
-      obj.chanselectbutton = obj.chanselect.editButton;
+      obj.chanselectbutton = obj.chanselect.editButton('parent',obj.panel);
              
       %% Initialize Mini Plot
       obj.miniplot = MatTSA.gui.timeseries.windowPlot(...
@@ -219,14 +219,16 @@ classdef dualPlot < guiTools.uipanel
         case 'normal'
           obj.pickXVal;
         case 'alt'         
-          c = uicontextmenu('Visible','on');
-          obj.toggleplot.axes.UIContextMenu = c;
-          m1 = uimenu(c,'Label','Mark Event');
-          m2 = uimenu(c,'Label','bar');
-          m3 = uimenu(c,'Label','baz');
-          m(4) = uimenu(c,'Label','Cancel');
+%           c = uicontextmenu('Visible','on');
+%           obj.toggleplot.axes.UIContextMenu = c;
+%           m1 = uimenu(c,'Label','Mark Event');
+%           m2 = uimenu(c,'Label','bar');
+%           m3 = uimenu(c,'Label','baz');
+%           m(4) = uimenu(c,'Label','Cancel');
         case 'open'
           disp('doubleclick');
+        case 'extend'
+          disp('extend');
         otherwise
           keyboard;
           error('Unknown selection type');

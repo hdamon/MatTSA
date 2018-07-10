@@ -194,7 +194,7 @@ classdef windowPlot < guiTools.uipanel
       currSize = obj.windowSize;
       if boundLeft
         newWindowStart = 1;
-        newWindowEnd   = obj.windowStart + currSize - 1;
+        newWindowEnd   = currSize;
       elseif boundRght
         newWindowStart = size(obj.timeseries,1) - currSize + 1;
         newWindowEnd = size(obj.timeseries,1);

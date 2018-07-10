@@ -1,0 +1,13 @@
+{
+  "_schemaVersion": "0.0.1",
+  "plot":
+  {
+    "inputs":
+      [
+      { "name":"obj", "kind":"required", "type",["MatTSA.timeseries"]},
+      { "name":"Name1", "kind":"namevalue", "type":["char","choices={"dualplot", "withdecomp", "butterfly", "split"}"]}
+      ]
+      
+  }
+
+}

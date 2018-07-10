@@ -181,7 +181,7 @@ classdef togglePlot < guiTools.uipanel
       assert(isa(val,'MatTSA.timeseries'),...
               'Must be a MatTSA.timeseries object');            
      % if ~isequal(obj.timeseries,val)
-        % Only update if there's a change.
+        % Only update if there's a change
         obj.timeseries = val;  
         obj.checkChan;
         obj.updateImage;

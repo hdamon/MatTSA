@@ -145,7 +145,7 @@ classdef tfDecomp <  labelledArray
     end
           
     function out = cat(dim,obj,a,varargin)      
-
+    
       assert(isEmptyOrEqual(obj.decompType,a.decompType),...
                   'Inconsistent decompType in concatenation');
       assert(isEmptyOrEqual(obj.dataType,a.dataType),...
@@ -154,7 +154,12 @@ classdef tfDecomp <  labelledArray
       out = cat@labelledArray(dim,obj,a);
       if isempty(out.decompType), out.decompType = a.decompType; end;
       if isempty(out.dataType), out.dataType = a.dataType; end;
-                  
+              
+      if ~isempty(varargin)
+        % Recurse when concatenating multiple objects
+        out = cat(dim,out,varargin{:});
+      end;      
+      
       function isValid = isEmptyOrEqual(A,B)
         isValid = isempty(A)||isempty(B);
         isValid = isValid||isequal(A,B);               
@@ -216,6 +221,7 @@ classdef tfDecomp <  labelledArray
         while deltaT<minDeltaT          
           minDeltaT = deltaT;  % Found a new minimum
           idxSearch = idxSearch+1; % Advance to next time point
+          if idxSearch > size(tfIn,2), break; end;
           deltaT = abs(tfIn.tVals(idxSearch)-timesOut(idxOut));  % Update deltaT       
         end;
         
@@ -224,10 +230,10 @@ classdef tfDecomp <  labelledArray
       end
       
       % Don't duplicate points in the output?
-      %outIdx = unique(outIdx);
+      outIdx = unique(outIdx);
       
       % Select the appropriate points to output.
-      s.decompType = '()';
+      s.type = '()';
       s.subs = {':' outIdx ':'};
       
       tfOut = tfIn.subsref(s);
@@ -277,17 +283,7 @@ classdef tfDecomp <  labelledArray
         idxChan = p.Results.showChan;
       end;
       
-      %% Get Object Parent
-      if isempty(p.Results.parent)
-        par = figure;
-      else
-        if ishghandle(p.Results.parent,'figure')
-         figure(p.Results.parent);
-        elseif ishghandle(p.Results.parent,'axes')
-          axes(p.Results.parent);
-        end
-      end;
-      
+
       %% Get Frequency Band Indices
       if ~isempty(p.Results.showBand)
         [~,idxLow] = min(abs(obj.fVals-p.Results.showBand(1)));
@@ -334,6 +330,12 @@ classdef tfDecomp <  labelledArray
       else
         imgRange = p.Results.range;
       end
+
+      %% If log requested
+      if p.Results.logImg
+        showImg = log10(showImg);        
+        imgRange = log10(imgRange);                
+      end;                  
       
       %% Get the RGB Image
       cmap = p.Results.colormap;    
@@ -341,20 +343,22 @@ classdef tfDecomp <  labelledArray
         % Only override if it's the default
         cmap.range = imgRange;
       end;      
-      
-      %% If log requested
-      if p.Results.logImg
-        showImg = log10(showImg);
-        imgRange = log10(imgRange);
-        cmap.range = imgRange;
-      end;            
-      
-
+                  
       [rgb,alpha] = cmap.img2rgb(showImg);
       tData = obj.tVals(idxT);
       fData = obj.fVals(idxF);
-      
-            
+
+      %% Get Object Parent
+      if isempty(p.Results.parent)
+        par = figure;
+      else
+        if ishghandle(p.Results.parent,'figure')
+         figure(p.Results.parent);
+        elseif ishghandle(p.Results.parent,'axes')
+          axes(p.Results.parent);
+        end
+      end;
+                              
       img = image(tData,[],rgb,'AlphaData',alpha);
       
       currAxis = gca;
@@ -375,9 +379,14 @@ classdef tfDecomp <  labelledArray
       
     end % imagesc()
       
-    function out = PSD(obj)
+    function out = PSD(obj,varargin)
       % Convert a time-frequency decomposition to power spectral density                  
       out = obj.copy;
+      if numel(varargin)>0
+        s.type = '()';
+        s.subs = {varargin{:}};
+        out = subsref(out,s);
+      end
       if ~isequal(obj.dataType,'PSD')      
         out.tfData = abs(out.tfData).^2;
         out.decompType = [obj.decompType '_PSD'];
@@ -419,8 +428,7 @@ classdef tfDecomp <  labelledArray
       % not provided or empty, indices default to all values.
       %
      
-      out = obj.subcopy@labelledArray(varargin{:});                    
-      out.chanLabels_ = out.chanLabels(chanIdx);            
+      [out, chanIdx] = obj.subcopy@labelledArray(varargin{:});                          
     end
     
   end
