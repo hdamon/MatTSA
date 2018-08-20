@@ -73,7 +73,7 @@ classdef timeseries < labelledArray
         
   properties (Access=protected, Constant)
     % Useful to prevent confusion elsewhere
-    timeDim    = 1;
+    timeDim = 1;
     chanDim = 2;
   end
   
@@ -118,6 +118,8 @@ classdef timeseries < labelledArray
         
       end;
     end         
+    
+    output = blockProcess(tSeriesIn,procHandle,varargin);
     
     %% Main MatTSA.timeseries plotting function
     function out = plot(obj,varargin)
@@ -247,7 +249,7 @@ classdef timeseries < labelledArray
       end
       
       % Defaults
-      if ~exist('units','var')||isempty(units), units = '_'; end;
+      if ~exist('units','var')||isempty(units), units = []; end;
       if ~exist('type','var')||isempty(type), type = 'data'; end;
       if ~exist('replace','var'), replace = false; end;
       
@@ -260,9 +262,21 @@ classdef timeseries < labelledArray
           error('Channel already exists');
         end;
       else
-         obj.array_ = [obj.data data(:)];        
-         obj.dimLabels{obj.chanDim}{end+1} = label;
-         obj.dimUnits{obj.chanDim}{end+1} = units;
+         %tmpTSeries = MatTSA.timeseries(data,'chanLabels',label,'chanUnits',units
+        
+        
+         obj.array_ = cat(2,obj.data,data);        
+         
+         tmpDim = arrayDim;
+         tmpDim.dimName = obj.dimensions(obj.chanDim).dimName;
+         tmpDim.dimLabels = {label};         
+         if isempty(units)
+           tmpDim.dimUnits = [];
+         else
+           tmpDim.dimUnits = {units};
+         end;
+         newDim = cat(1,obj.dimensions(obj.chanDim),tmpDim);
+         obj.dimensions(obj.chanDim) = newDim;                           
          obj.chanType_{end+1} = type;         
       end
     end;
@@ -372,6 +386,13 @@ classdef timeseries < labelledArray
       obj.arrayRange_ = [];      
     end % END set.chanType
                 
+    function set.chanType_(obj,val)
+      if size(val,1)>1
+        val = val';
+      end;
+      obj.chanType_ = val;
+    end
+    
     %% Get/Set Methods for obj.dataUnits
     function out = get.dataUnits(obj)
       out = obj.dimUnits{obj.chanDim};      
@@ -440,7 +461,13 @@ classdef timeseries < labelledArray
         val = (1./obj.sampleRate)*(0:size(obj.data,1)-1);
       end
       obj.dimValues{obj.timeDim} = val;
-    end;
+      obj.postTValUpdate;
+    end;   
+    
+    function postTValUpdate(obj)
+      % Function called after obj.tVals are updated
+      return        
+    end
     
     %% Get/Set Methods for obj.tUnits
     function out = get.tUnits(obj)
@@ -474,7 +501,7 @@ classdef timeseries < labelledArray
     
     %% Get/Set Methods for obj.tRange
     function rangeOut = get.tRange(obj)
-      rangeOut = [obj.tVals(1) obj.tVals(end)];
+      rangeOut = obj.dimensions(obj.timeDim).dimRange;
     end;    
     function set.tRange(obj,~)
       error('obj.tRange is derived from obj.tVals');
@@ -486,12 +513,20 @@ classdef timeseries < labelledArray
     plotOut = plotWithDecomp(tseries,varargin);
     
     function outTseries = filtfilt(tseries,dFilter)
-      % Overloaded filtfilt function for crltseries.type.timeseries objects
+      % Overloaded filtfilt function for MatTSA.timeseries objects
+      %
+      % outTseries = filtfilt(tseries,dFilter)
       %
       % Inputs
       % ------
       %   tseries : A crltseries.type.tseries.object to be filtered
       %  dFilter : A Matlab digital filter (typically created with designfilt)
+      %
+      % Output
+      % ------
+      %   outTseries : A new MatTSA.timeseries object, copied from the
+      %                 original, with the specified filter applied to
+      %                 all data channels.
       %
                   
       dataChans = tseries.getChannelsByType('data');      

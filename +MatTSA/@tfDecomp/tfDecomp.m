@@ -66,6 +66,7 @@ classdef tfDecomp <  labelledArray
         p.addParameter('tVals',[],@(x) isnumeric(x)&&isvector(x));
         p.addParameter('fVals',[],@(x) isnumeric(x)&&isvector(x));
         p.addParameter('chanLabels',[],@(x) ischar(x)||iscellstr(x));
+        p.addParameter('decompParams',[]);
         p.parse(varargin{:});
         
         obj.tfData = tfData;
@@ -74,6 +75,7 @@ classdef tfDecomp <  labelledArray
         obj.tVals      = p.Results.tVals;
         obj.fVals      = p.Results.fVals;
         obj.chanLabels = p.Results.chanLabels;
+        obj.decompParams = p.Results.decompParams;
                
       end;
     end
@@ -209,6 +211,10 @@ classdef tfDecomp <  labelledArray
       [~,searchStart] = min(abs(tfIn.tVals-timesOut(1)));
       [~,searchEnd]   = min(abs(tfIn.tVals-timesOut(end)));
             
+      if (searchEnd-searchStart)<numel(timesOut)
+        outIdx = searchStart:searchEnd;
+      else
+      
       % Initialize output index
       outIdx = nan(numel(timesOut),1);
       outIdx(1) = searchStart;
@@ -228,7 +234,7 @@ classdef tfDecomp <  labelledArray
         idxSearch = idxSearch-1; % Take one step back. 
         outIdx(idxOut) = idxSearch; % Update output                        
       end
-      
+      end;
       % Don't duplicate points in the output?
       outIdx = unique(outIdx);
       
@@ -394,6 +400,29 @@ classdef tfDecomp <  labelledArray
       end;
     end
     
+    function out = phase(obj,varargin)
+      % Returns the phase of a complex valued tfDecomp.
+      %
+      
+      out = obj.copy;
+      if numel(varargin)>0
+        s.type = '()';
+        s.subs = {varargin{:}};
+        out = subsref(out,s);
+      end;
+      
+      X = real(out.data);
+      Y = imag(out.data);
+      
+      phase = atan(Y./abs(X));
+      phase((X==0)&(Y==0)) = nan;
+            
+      out.tfData = phase;
+      out.decompType = [obj.decompType '_Phase'];
+      
+      
+    end
+    
     function out = abs(obj)
       % Convert a time-frequency decomposition to spectral magnitude            
       out = obj.copy;
@@ -412,7 +441,7 @@ classdef tfDecomp <  labelledArray
       out.dataType = 'PLF';
     end;
               
-
+    tfOut = interpFrequencies(tfIn,outFreq,type);
     
     
   end

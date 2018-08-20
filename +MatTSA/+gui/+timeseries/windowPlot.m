@@ -283,7 +283,7 @@ classdef windowPlot < guiTools.uipanel
       %
       
       % Get start/end from another windowplot object
-      if isa(windowStart,'MatTSA.gui.timeseries.interface.windowPlot')
+      if isa(windowStart,'MatTSA.gui.timeseries.windowPlot')
         [windowStart, windowEnd] = windowStart.getWindow;
       end
       

@@ -1,6 +1,37 @@
 function pOut = plotWithDecomp(tseriesIn,varargin)
 % Plot a MatTSA.timeseries object and an associated decomposition
 %
+% Inputs
+% ------
+%  tseriesIn : MatTSA.timeseries object
+%  
+% Param-Value Inputs
+% ------------------
+%   'decompType' : String with decomposition name to plot
+%                     DEFAULT: 'wavelet'
+%     'imgRange' : Image range to use for the colormap
+%                     DEFAULT: [] (Uses full data range)
+%     'showChan' : Cell string with the names of one or more channels. Named
+%                   channels will each be displayed in their own
+%                   spectrogram.
+%                     DEFAULT: 1 (Show first channel)
+%     'showBand' : 1x2 vector of Min/Max Frequencies to Display
+%                     DEFAULT: [] (Show All)
+%    'showTimes' : 1x2 vector of Min/Max Times to Display
+%                     DEFAULT: [] (Show All)
+%       'logImg' : Flag to enable display of a log10-scaled image
+%                     DEFAULT: False
+%         'cmap' : guiTools.widget.alphacolor object
+%                     DEFAULT: New Object w/ Jet Colormap
+%       'Parent' : uiObject to parent to 
+%                     DEFAULT: New Figure
+%     'position' : Position of plot in UI
+%                     DEFAULT: [10 10 2550 950]
+%
+% Outputs
+% -------
+%   pOut : (Optional) Structure with handles to the two plot objects
+%
 %
 
 %% Input Parsing

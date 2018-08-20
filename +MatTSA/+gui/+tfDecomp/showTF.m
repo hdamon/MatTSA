@@ -1,27 +1,47 @@
 classdef showTF < guiTools.uipanel
-%classdef showTF < matlab.ui.container.Panel
 % Provides a GUI interface for crlEEG.type.timeFrequencyDecomposition objects
 %
+% classdef showTF < matlab.ui.container.Panel
 % 
+% Inputs
+% ------
+%   tfDecomp : MatTSA.tfDecomp Object to display
+%
+% Param-Value Inputs
+% ------------------
+%      'title' : Title for the plot 
+%      'range' : Range to use for the colormap
+%   'colormap' : guiTools.widget.alphacolor object
+%     'logImg' : Flag to enable plotting of a log10-scaled image
+%   'showChan' : Cell 
+%   'showBand'
+%  'showTimes'
+%
+% Additional parameters will be passed to a guiTools.uipanel object. See
+% that help for more information.
+%
+%
   properties
-    tfDecomp
-    ax
-    cmap
+    tfDecomp   % The decomposition being displayed
+    ax         % Handle to the axis the display is in
+    cmap       % Colormap object
   end;
   
   properties (Dependent =true)
+    showChan
     showBand
     showTimes
     logImg
-    imgRange
-    showChan
+    imgRange    
   end
-   
+  
+  % Publically accessible but hidden
   properties (Hidden)
     chanSelect
     editCMap
   end
-  
+    
+  %% Actual Parameter Values are stored in Protected Properties
   properties (Access=protected)
     showBand_
     showTimes_
@@ -51,22 +71,22 @@ classdef showTF < guiTools.uipanel
         p.addParameter('colormap',guiTools.widget.alphacolor,@(x) isa(x,'guiTools.widget.alphacolor'));
         p.parse(tfDecomp,varargin{:});
                       
-        % Superclass Constructor
+        %% Superclass Constructor
         obj = obj@guiTools.uipanel(p.Unmatched); 
                 
-        % Display Axes
+        %% Display Axes
         obj.ax = axes('parent',obj.panel,'units','normalized');        
         
-        % Interactive Colormap
+        %% Interactive Colormap
         obj.cmap = p.Results.colormap;
         if ~isempty(p.Results.range)
           obj.cmap.range = p.Results.range;
         end;
                     
-        % Input Data Handle
+        %% Input Data Handle
         obj.tfDecomp = p.Results.tfDecomp;
         
-        % Channel Selection Object
+        %% Channel Selection Object
         obj.chanSelect = uicontrol('Style','popup',...
                                    'String',obj.tfDecomp.chanLabels,...
                                    'Parent',obj.panel,...                                   
@@ -88,23 +108,25 @@ classdef showTF < guiTools.uipanel
           obj.chanSelect.Value = idx;
         end
                 
-        % Set Internal Variables
+        %% Set Internal Variables
         obj.showBand_  = p.Results.showBand;
         obj.showTimes_ = p.Results.showTimes;
         obj.logImg_    = p.Results.logImg;
         
-        % Add Listeners
+        %% Add Listeners
         obj.listeners_ = addlistener(obj.cmap,'updatedOut',@(h,evt) obj.updateImage);
         
-        % Set Resize CallBack. Then Call it.
+        %% Set Resize CallBack. Then Call it.
         obj.ResizeFcn = @(h,evt) obj.resizeInternals();
         obj.Units = 'normalized';
         obj.resizeInternals;
         
-        % Actually Plot
+        %% Actually Plot
         obj.updateImage;                
     end      
     
+    %% Get/Set Methods for Dependent Properties
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     function out = get.showBand(obj)
       out = obj.showBand_;
     end;
@@ -141,28 +163,7 @@ classdef showTF < guiTools.uipanel
         obj.cmap.range = val;
       end;      
     end
-          
-    function resizeInternals(obj)
-      currUnits = obj.Units;
-      cleanup = onCleanup(@() set(obj,'Units',currUnits));
-      
-      obj.Units = 'pixels';
-      pixPos = obj.Position;
-    %  disp(['TF Panel is of Size: ' num2str(pixPos)]);
-      obj.chanSelect.Units = 'pixels';
-      obj.chanSelect.Position = [2 2 100 30];
-            
-      obj.editCMap.Units = 'pixels';
-      obj.editCMap.Position = [ 105 2 100 30];
-      
-      obj.ax.Units = 'pixels';
-      xSize = max([5 (pixPos(3)-95)]);      
-      ySize = max([5 0.95*(pixPos(4)-50)]);      
-      obj.ax.Position = [70 50 xSize ySize];            
-      
-      %disp(['Setting TF Axes Position: ' num2str([70 50 xSize ySize])]);
-    end
-    
+              
     function out = get.showChan(obj)
       out = obj.chanSelect.String{obj.chanSelect.Value};
     end
@@ -178,9 +179,37 @@ classdef showTF < guiTools.uipanel
       end
         
     end
-        
+
+    %% GUI Callbacks
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    function resizeInternals(obj)
+      % Callback for resizing 
+      %
+      %
+      currUnits = obj.Units;
+      cleanup = onCleanup(@() set(obj,'Units',currUnits));
+      
+      obj.Units = 'pixels';
+      pixPos = obj.Position;    
+      obj.chanSelect.Units = 'pixels';
+      obj.chanSelect.Position = [2 2 100 30];
+            
+      obj.editCMap.Units = 'pixels';
+      obj.editCMap.Position = [ 105 2 100 30];
+      
+      obj.ax.Units = 'pixels';
+      xSize = max([5 (pixPos(3)-95)]);      
+      ySize = max([5 0.95*(pixPos(4)-50)]);      
+      obj.ax.Position = [70 50 xSize ySize];                        
+    end
+    
     function updateImage(obj)
+      % Update the displayed image
+      %
+      
       axes(obj.ax); cla;
+      
+      % Display the Image
       set(guiTools.util.parentfigure.get(obj),'colormap',obj.cmap.cmap);
       obj.tfDecomp.imagesc('parent',obj.ax,...
                            'showBand',obj.showBand,...
@@ -189,6 +218,7 @@ classdef showTF < guiTools.uipanel
                            'logImg',obj.logImg,...
                            'colormap',obj.cmap);
                          
+      % Generate a Colorbar
       if isempty(obj.cbar_)||~ishghandle(obj.cbar_)
         obj.cbar_ = colorbar('peer',obj.ax,'East');                   
       end;
@@ -198,8 +228,6 @@ classdef showTF < guiTools.uipanel
       tvals = obj.cbar_.Ticks;
       tickLabels = strsplit(num2str(obj.cmap.range(1) + tvals*(obj.cmap.range(2)-obj.cmap.range(1))));
       obj.cbar_.TickLabels = tickLabels;
-
-      %obj.ax.Position = [0.025 0.05 0.965 0.9];
     end
     
   end

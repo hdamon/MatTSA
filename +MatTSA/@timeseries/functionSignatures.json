@@ -1,6 +1,6 @@
 {
   "_schemaVersion": "0.0.1",
-  "plot":
+  "MatTSA.timeseries.plot":
   {
     "inputs":
       [

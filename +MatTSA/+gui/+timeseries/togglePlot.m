@@ -394,7 +394,7 @@ classdef togglePlot < guiTools.uipanel
                                                 'dataRange',obj.dataRange,...
                                                 'scale',obj.scale);
         end;
-        drawnow;
+      % drawnow;
         notify(obj,'updatedOut');
       catch
         % This is a bit of a stupid thing, because I'm using it to avoid

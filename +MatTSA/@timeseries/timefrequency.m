@@ -133,7 +133,7 @@ function out = continuousWaveletDecomp(tseries,varargin)
 %  'param' :
 %  'freqs' :
 %
-% This is computed using the function contwt, available from MatlabCentral
+% This is computed using the function wavelet(), available from MatlabCentral
 % at:
 % https://www.mathworks.com/matlabcentral/fileexchange/20821
 
@@ -142,7 +142,7 @@ p = inputParser;
 p.addRequired('tseries',@(x) isa(x,'MatTSA.timeseries'));
 p.addParameter('pad',1);
 p.addParameter('dj',0.1);
-p.addParameter('s0',-1); % Roughly 240Hz w/ a 6 Cycle Wavelet
+p.addParameter('s0',-1); 
 p.addParameter('j1',-1);
 p.addParameter('mother',-1);
 p.addParameter('param',-1);
