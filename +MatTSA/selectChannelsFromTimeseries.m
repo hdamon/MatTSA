@@ -101,6 +101,7 @@ classdef selectChannelsFromTimeseries < handle
         obj.currChannels = val;
         obj.syncGUI;        
         notify(obj,'updatedOut');
+        guiTools.util.parentfigure.raise(obj.gui);
       end
     end    
     

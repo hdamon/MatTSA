@@ -152,14 +152,24 @@ classdef tfDecomp <  labelledArray
                   'Inconsistent decompType in concatenation');
       assert(isEmptyOrEqual(obj.dataType,a.dataType),...
                   'Inconsistent dataType in concatenation');
-             
+      
+       
       out = cat@labelledArray(dim,obj,a);
       if isempty(out.decompType), out.decompType = a.decompType; end;
       if isempty(out.dataType), out.dataType = a.dataType; end;
               
       if ~isempty(varargin)
+        if numel(varargin)<5
+         out = cat(dim,out,varargin{:});
+        else
+         % Split recursion when concatenating multiple objects          
+         nSplit = ceil(numel(varargin)/2);                
+         blockA = cat(dim,out,varargin{1:nSplit});
+         blockB = cat(dim,varargin{(nSplit+1):end});        
+         out = cat(dim,blockA,blockB);
+        end;        
         % Recurse when concatenating multiple objects
-        out = cat(dim,out,varargin{:});
+        %out = cat(dim,out,varargin{:});
       end;      
       
       function isValid = isEmptyOrEqual(A,B)

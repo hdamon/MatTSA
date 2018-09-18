@@ -42,8 +42,12 @@ nBlocks = floor(size(tSeriesIn,1)/blockSize);
 output = eval(p.Results.outputType);
 
 %% Loop Over Blocks
+tic;
 for idxBlock = 1:nBlocks
-  dSize = fprintf(['Processing block ' num2str(idxBlock) ' of ' num2str(nBlocks)]);  
+  currTime = toc;
+  avgTime = currTime/idxBlock;
+  compTime = avgTime*(nBlocks-idxBlock);
+  dSize = fprintf(['Processing block ' num2str(idxBlock) ' of ' num2str(nBlocks) ' Total Time: ' num2str(currTime) ' Avg/Block: ' num2str(avgTime) ' Est Time Remaining: ' num2str(compTime)]);  
   offset = (idxBlock-1)*blockSize;
   
   % Get the Block

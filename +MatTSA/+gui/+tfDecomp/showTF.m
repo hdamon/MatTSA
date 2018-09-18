@@ -68,11 +68,15 @@ classdef showTF < guiTools.uipanel
         p.addParameter('showChan',[]);
         p.addParameter('logImg',false);
         p.addParameter('range',[]);        
+        p.addParameter('Parent',[]);
         p.addParameter('colormap',guiTools.widget.alphacolor,@(x) isa(x,'guiTools.widget.alphacolor'));
         p.parse(tfDecomp,varargin{:});
                       
         %% Superclass Constructor
-        obj = obj@guiTools.uipanel(p.Unmatched); 
+        parent = p.Results.Parent;
+        if isempty(parent), parent = figure; end;        
+        
+        obj = obj@guiTools.uipanel('Parent',parent,p.Unmatched); 
                 
         %% Display Axes
         obj.ax = axes('parent',obj.panel,'units','normalized');        

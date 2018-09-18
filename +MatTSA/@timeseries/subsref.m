@@ -11,7 +11,8 @@ switch s(1).type
       s(2).subs = obj.getNumericIndex(s(2).subs{:});
       varargout = {subsref(tmp,s(2:end))};      
     elseif ismember(s(1).subs,{'addChannel' 'removeChannel'})
-      % Bit of a hack.
+      % Bit of a hack. Is this really necessary? I think it should be
+      % caught by the methods block of labelledArray.subsref.
       builtin('subsref',obj,s);
       varargout = {obj};
     else

@@ -39,6 +39,7 @@ p = inputParser;
 p.KeepUnmatched = true;
 p.addParameter('Parent',[]);
 p.addParameter('decompType','wavelet');
+p.addParameter('decomp',[]);
 p.addParameter('marks',[]);
 p.addParameter('imgRange',[]);
 p.addParameter('showChan',1);
@@ -64,6 +65,17 @@ f1.Position = p.Results.position;
 
 %% Display tfDecomps
 
+if ~isempty(p.Results.decomp)
+  % Externally Provided
+  decompToShow = p.Results.decomp;
+else
+  % Use internal decomposition structure.
+  if ~isfield(tseriesIn.decomposition,p.Results.decompType)  
+  error('Specified decomposition not found');
+  end;
+  decompToShow = tseriesIn.decomposition.(p.Results.decompType);
+end;
+
 % Set channels to display
 showChan = p.Results.showChan;
 if ~iscell(showChan), showChan = {showChan}; end;
@@ -74,7 +86,7 @@ if nChan==0, showChan = {[]}; nChan = 1; end;
 unitHeight = 1/(nChan+1);
 cmap = p.Results.cmap;
 for i = 1:nChan
-  p1(i) = tseriesIn.decomposition.(p.Results.decompType).show(...
+  p1(i) = decompToShow.show(...
     'Parent',f1,...
     'showBand',p.Results.showBand, ...
     'showTimes',p.Results.showTimes,...
