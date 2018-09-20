@@ -66,7 +66,7 @@ classdef showTF < guiTools.uipanel
         p.addParameter('showBand',[]);
         p.addParameter('showTimes',[]);
         p.addParameter('showChan',[]);
-        p.addParameter('logImg',false);
+        p.addParameter('logImg',true);
         p.addParameter('range',[]);        
         p.addParameter('Parent',[]);
         p.addParameter('colormap',guiTools.widget.alphacolor,@(x) isa(x,'guiTools.widget.alphacolor'));
