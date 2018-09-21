@@ -90,7 +90,7 @@ classdef timeseries < labelledArray
       
       if nargin>0
         p = inputParser;
-        p.addRequired('data',@(x) (isnumeric(x)&&ismatrix(x))||...
+        p.addRequired('data',@(x) (isnumeric(x)&&(ndims(x)>=2))||...
                                     isa(x,'MatTSA.timeseries'));
         p.addParameter('chanLabels', []  ,@(x) isempty(x)||iscellstr(x));
         p.addParameter(  'chanType', []  ,@(x) ischar(x)||iscellstr(x));
