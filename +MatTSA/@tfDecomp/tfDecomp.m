@@ -374,7 +374,8 @@ classdef tfDecomp <  labelledArray
           axes(p.Results.parent);
         end
       end;
-                              
+       
+      yyaxis left;
       img = image(tData,[],rgb,'AlphaData',alpha);
       
       currAxis = gca;

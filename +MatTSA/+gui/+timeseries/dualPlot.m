@@ -1,14 +1,37 @@
 classdef dualPlot < guiTools.uipanel
   % Tool for exploring time series timeseries
   %
-  % classdef dualPlot < uitools.baseobjs.gui
+  % classdef dualPlot < guiTools.uipanel
+  %
+  % obj = MatTSA.gui.timeseries.dualPlot(timeseries,varargin)
+  %
+  % Inputs
+  % ------
+  %   timeseries : MatTSA.timeseries object
+  %
+  % Param-Value Inputs
+  % ------------------
+  %   'Parent' : Figure to parent the dualPlot to.
+  %                 DEFAULT: New Figure
+  %   'title'  : Title for the uipanel
+  %
+  % Output
+  % ------
+  %   obj : MatTSA.gui.timeseries.dualPlot object
+  %
+  % Properties
+  % ----------
+  %        currIdx:  
+  %   externalSync: 
+  % 
+  %
   %
   % Written By: Damon Hyde
   % Last Edited: June 10, 2016
   % Part of the cnlEEG Project
   %
   
-  
+ 
   properties (Dependent=true)
     currIdx
     externalSync
@@ -19,13 +42,13 @@ classdef dualPlot < guiTools.uipanel
   end
   
   properties (SetAccess=protected)
-    miniplot
-    toggleplot
-    playcontrols
-    chanselect
-    chanselectbutton
-    displayChannels
-    vLine
+    miniplot          % Miniplot for selection of subseries
+    toggleplot        % Main display of butterfly/split plot
+    playcontrols      % Control for timepoint selection
+    chanselect        % Channel selection object
+    chanselectbutton  % Channel selection button in UI
+    displayChannels   % UNUSED?
+    vLine             % Display of veritical line in plot
   end
   
   methods
@@ -38,15 +61,14 @@ classdef dualPlot < guiTools.uipanel
       p.addParamValue('title','TITLE', @(x) ischar(x));
       parse(p,timeseries,varargin{:});           
                 
-      %% Initialize Base Object
-      
+      %% Initialize Base Object      
       parent = p.Results.Parent;
       if isempty(parent), parent = figure; end;
       
       obj = obj@guiTools.uipanel('parent',parent,p.Unmatched); %...     
       guiTools.util.setMinFigSize(gcf,obj.Position(1:2),obj.Position(3:4),5);
                  
-      % Set up the channel selection object
+      %% Set up the channel selection object
       obj.chanselect       = MatTSA.selectChannelsFromTimeseries;
       obj.chanselectbutton = obj.chanselect.editButton('parent',obj.panel);
              
@@ -91,7 +113,7 @@ classdef dualPlot < guiTools.uipanel
       tmp = p.Results.timeseries.copy;
       if isprop(tmp,'decomposition')        
         % Really ought to be moved out of this package.
-      tmp.decomposition = [];
+        tmp.decomposition = [];
       end;
       
       obj.chanselect.input = tmp;
@@ -118,7 +140,8 @@ classdef dualPlot < guiTools.uipanel
       
       set(obj.toggleplot.axes,'ButtonDownFcn', @obj.captureMouseClick);
       
-      set(get(obj.panel,'Parent'),'KeyPressFcn',@obj.keyPress);      
+      % Set figure keypress response.     
+      set(ancestor(obj.panel,'Figure'),'KeyPressFcn',@obj.keyPress);      
       
     end
     

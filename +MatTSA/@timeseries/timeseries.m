@@ -507,6 +507,22 @@ classdef timeseries < labelledArray
       error('obj.tRange is derived from obj.tVals');
     end;     
     
+    function [out,varargout] = applyDimFunc(funcHandle,obj,idxDim,varargin)
+      if nargout==1
+        out = applyDimFunc@labelledArray(funcHandle,obj,idxDim,varargin{:});
+      else
+        outCell = cell(1,nargout-1);
+        [out,outCell{:}] = applyDimFunc@labelledArray(funcHandle,obj,idxDim,varargin{:});
+        varargout = outCell;
+      end
+      if varargin{idxDim}==2
+        % New Channel Type if Collapsing Channel Dimension
+       for i = 1:numel(out)
+         out(i).chanType = {'data'};
+       end;
+      end;
+    end
+    
     %% Methods with their own m-files
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     plotOut = butterfly(tseries,varargin);
