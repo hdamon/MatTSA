@@ -376,6 +376,7 @@ classdef tfDecomp <  labelledArray
       end;
        
       yyaxis left;
+      set(gca,'YColor',[0 0 0]);
       img = image(tData,[],rgb,'AlphaData',alpha);
       
       currAxis = gca;
