@@ -48,8 +48,8 @@ function out =  timefrequency(tseries,varargin)
 validTypes = {'multitaper' 'eeglab' 'spectrogram' 'wavelet'};
 p = inputParser;
 p.KeepUnmatched = true;
-p.addOptional('method','wavelet',@(x) ismember(x,validTypes));
 p.addRequired('tseries',@(x) isa(x,'MatTSA.timeseries'));
+p.addOptional('method','wavelet',@(x) ismember(x,validTypes));
 p.parse(tseries,varargin{:});
 
 switch p.Results.method
@@ -65,7 +65,7 @@ switch p.Results.method
     out = continuousWaveletDecomp(tseries,p.Unmatched);
   otherwise
     error('Unknown decomposition type');
-end;
+end
 
 end
 
@@ -106,7 +106,7 @@ for i = 1:size(data,2)
     p.Results.overlap,...
     p.Results.freqs,...
     tseries.sampleRate);
-end;
+end
 
 %% Output Parsing
 out = MatTSA.tfDecomp('spectrogram',s,t+tseries.tRange(1),f,tseries.chanLabels(dataChans));
@@ -137,7 +137,7 @@ function out = continuousWaveletDecomp(tseries,varargin)
 % at:
 % https://www.mathworks.com/matlabcentral/fileexchange/20821
 
-
+%% Input Parsing
 p = inputParser;
 p.addRequired('tseries',@(x) isa(x,'MatTSA.timeseries'));
 p.addParameter('pad',1);
@@ -155,15 +155,15 @@ S0 = p.Results.s0;
 J1 = p.Results.j1;
 MOTHER = p.Results.mother;
 PARAM = p.Results.param;
-
 DT = 1./tseries.sampleRate;
 
+% Restrict the analysis to data channels
 dataChans = logical(tseries.isChannelType('data'));
 data = tseries.data(:,dataChans);
 
 % Defaults from wavelet()
-if (S0 ==-1 ), S0 = 2*DT; end;
-if (DJ ==-1 ), DJ = 1/4; end;
+if (S0 ==-1 ), S0 = 2*DT; end
+if (DJ ==-1 ), DJ = 1/4; end
 nOut = fix((log(size(data,1)*DT/S0)/log(2))/DJ)+1;
 
 doInterp = false;
@@ -195,13 +195,11 @@ out = MatTSA.tfDecomp(WAVE,'decompType','wavelet',...
                            'tVals',tseries.tVals,...
                            'fVals',Fout,...
                            'chanLabels',tseries.chanLabels(dataChans));
-
-                         
+                   
 waveParams.SCALE = SCALE;
 waveParams.COI   = COI;
 out.decompParams = varargin;
 out.decompParams = [out.decompParams {waveParams}];
-
 
 end
 
@@ -252,7 +250,7 @@ if p.Results.nOutput<=1
 else
   % As an explicit number of samples
   nOutput = p.Results.nOutput;
-end;
+end
 nOutput = floor(nOutput);
 
 % Find window centers
@@ -273,7 +271,7 @@ indices = indices + repmat(winCenters,[size(indices,1) 1]);
 f = p.Results.FFTlength;
 if ~isempty(p.Results.freqs)
   f = p.Results.freqs;
-end;
+end
 
 % Rearrange data matrix
 
@@ -289,7 +287,7 @@ for idxChan = 1:numel(doChans)
   
   pxxOut(:,:,idxChan) = pxx;
   
-end;
+end
 
 out = MatTSA.tfDecomp('multitaper',pxxOut,times,fx,tseries.chanLabels(doChans));
 out.params.windowSize = winSize;
@@ -324,7 +322,7 @@ p.parse(tseries,varargin{:});
 windowSize = p.Results.windowSize;
 if isempty(windowSize)
   windowSize = size(tseries,1);
-end;
+end
 
 % Get output frequencies
 nFreqs = windowSize/2;
@@ -368,7 +366,7 @@ if p.Results.nOutput<=1
 else
   % As an explicit number of samples
   nOutput = p.Results.nOutput;
-end;
+end
 nOutput = floor(nOutput);
 
 tmioutopt = { 'ntimesout' nOutput };
@@ -378,7 +376,7 @@ if isempty(p.Results.tlimits)
   g.tlimits = [1 size(tseries,1)];
 else
   g.tlimits = p.Results.tlimits;
-end;
+end
 
 g.detrend   =  p.Results.detrend;
 g.type      = p.Results.type;
