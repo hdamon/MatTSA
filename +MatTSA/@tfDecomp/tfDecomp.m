@@ -148,12 +148,16 @@ classdef tfDecomp <  labelledArray
           
     function out = cat(dim,obj,a,varargin)      
     
+      % Return 
+      if ~exist('a','var'),a = [] ; end;
+      if isempty(a), out = obj; return; end;
+      if isempty(obj), out = a; return; end;
+      
       assert(isEmptyOrEqual(obj.decompType,a.decompType),...
                   'Inconsistent decompType in concatenation');
       assert(isEmptyOrEqual(obj.dataType,a.dataType),...
                   'Inconsistent dataType in concatenation');
-      
-       
+             
       out = cat@labelledArray(dim,obj,a);
       if isempty(out.decompType), out.decompType = a.decompType; end;
       if isempty(out.dataType), out.dataType = a.dataType; end;
@@ -376,6 +380,7 @@ classdef tfDecomp <  labelledArray
       end;
        
       yyaxis left;
+      set(gca,'YColor',[0 0 0]);
       img = image(tData,[],rgb,'AlphaData',alpha);
       
       currAxis = gca;

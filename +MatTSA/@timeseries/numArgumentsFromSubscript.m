@@ -2,7 +2,7 @@ function n = numArgumentsFromSubscript(obj,s,indexingContext)
   
 
 n = numArgumentsFromSubscript@labelledArray(obj,s,indexingContext);
-
+return;
 % Default
 if ~iscell(s(1).subs)
   n = builtin('numArgumentsFromSubscript',obj,s,indexingContext);

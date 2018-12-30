@@ -234,11 +234,13 @@ classdef timeseries < labelledArray
         if ~exist('type','var')||isempty(type), type = repmat({'data'},numel(label),1); end;
         
         if ~iscellstr(units)
-          units = repmat(units,numel(label),1);
+          [tmp{1:numel(label)}] = deal(units);
+          units = tmp;          
         end;
         
         if ~iscellstr(type)
-          type = repmat(typs,numel(label),1);
+          [tmp{1:numel(label)}] = deal(type);
+          type = tmp;          
         end;
         
         for i = 1:numel(label)

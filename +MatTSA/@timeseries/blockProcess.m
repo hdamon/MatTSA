@@ -8,7 +8,9 @@ function output = blockProcess(tSeriesIn,procHandle,varargin)
 %   tSeriesIn : EEG to process
 %  procHandle : Function handle to the analysis function
 %                 Must take a single MatTSA.timeseries object as input, 
-%                 and return a single MatTSA.timeseries object.
+%                 and return a structure as the output. The fields of the
+%                 structure should be the same for all input EEG's, so that
+%                 the output blocks can be appropriately concatenated.
 %
 % Param-Value Inputs
 % ------------------
@@ -34,7 +36,7 @@ p.addParameter('catDim',2);
 p.addParameter('outputType','MatTSA.tfDecomp', @(x) isempty(x)||ischar(x));
 p.parse(varargin{:});
 
-blockSize    = p.Results.blockSize;
+blockSize    = p.Results.blockSize*tSeriesIn.sampleRate;
 blockOverlap = p.Results.blockOverlap;
 
 nBlocks = floor(size(tSeriesIn,1)/blockSize);
@@ -60,7 +62,12 @@ for idxBlock = 1:nBlocks
   % tmpEEG = tSeriesIn(offset+1:offset+blockSize,:);
   
   % Process the Block
-  output = cat(2,output,procHandle(tmpEEG));
+  tmp = procHandle(tmpEEG);
+  if ~isempty(tmp)
+    % Discard failed blocks. Although procHandle should really be returning
+    % a valid, but empty, block.
+    output = cat(2,output,tmp);
+  end;
   fprintf(repmat('\b',1,dSize));
 end
 disp('Completed block processing');
