@@ -301,7 +301,8 @@ classdef timeseries < labelledArray
       % Truncate the internal channels
       obj.array_ = obj.data(:,idx);
       obj.dimensions(obj.chanDim) = ...
-                      obj.dimensions(obj.chanDim).subselectDimensions(idx);                  
+                      obj.dimensions(obj.chanDim).subcopy(idx);
+%                      obj.dimensions(obj.chanDim).subselectDimensions(idx);                  
       obj.chanType_ = obj.chanType_(idx);
     end
            
