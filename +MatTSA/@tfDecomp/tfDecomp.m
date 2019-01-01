@@ -147,7 +147,7 @@ classdef tfDecomp <  labelledArray
     end
           
     function out = cat(dim,obj,a,varargin)      
-    
+       
       % Return 
       if ~exist('a','var'),a = [] ; end;
       if isempty(a), out = obj; return; end;
